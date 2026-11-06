@@ -1,0 +1,14 @@
+.venv/
+.env
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Source documents and derived output stay local.
+data/raw/*
+!data/raw/.gitkeep
+data/parsed/*
+!data/parsed/.gitkeep
+
+# Local notes for Claude sessions
+CLAUDE.md

@@ -1,0 +1,7 @@
+# Paths are relative to the repo root. Run commands from there.
+[paths]
+raw_dir = "data/raw"
+parsed_dir = "data/parsed"
+questions_dir = "data/questions"
+
+# Later: [chunking], [embedding], [retrieval] settings go here.

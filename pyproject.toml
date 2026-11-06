@@ -1,0 +1,26 @@
+[project]
+name = "rag-app"
+version = "0.1.0"
+description = "Document Q&A that answers only from provided documents, with citations and an eval harness."
+requires-python = ">=3.11"
+dependencies = [
+    "pymupdf>=1.24",            # PDF text + table of contents (AGPL licence)
+    "beautifulsoup4>=4.12",     # HTML parsing
+    "lxml>=5.0",                # fast parser backend for BeautifulSoup
+    "psycopg[binary]>=3.2",     # Postgres driver
+    "pgvector>=0.3",            # vector type adapters for psycopg
+    "sentence-transformers>=3.0",  # embeddings (not used yet)
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
