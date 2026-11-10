@@ -12,7 +12,7 @@ from psycopg.types.json import Jsonb
 from api.security import hash_password, new_invite_code, new_token, sha256, verify_password
 
 USERNAME_RE = re.compile(r"^[a-z0-9_][a-z0-9_-]{2,31}$")
-MIN_PASSWORD = 10
+MIN_PASSWORD = 8
 
 
 class AccountError(Exception):

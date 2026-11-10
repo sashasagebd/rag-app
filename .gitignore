@@ -15,3 +15,5 @@ data/notebooks/
 
 # Local notes for Claude sessions
 CLAUDE.md
+web/node_modules/
+web/dist/

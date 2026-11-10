@@ -79,7 +79,7 @@ def test_signup_login_logout(env):
 def test_short_password_and_bad_username_are_rejected(env):
     code = accounts.create_invite(env["conn"], "pytest")
     r = env["a"].post("/api/auth/signup", json={"invite": code, "username": "pytest_a", "password": "short"})
-    assert r.status_code == 400 and "at least 10" in r.json()["detail"]
+    assert r.status_code == 400 and "at least 8" in r.json()["detail"]
     r = env["a"].post("/api/auth/signup", json={"invite": code, "username": "Py Test!", "password": "x" * 12})
     assert r.status_code == 400 and "usernames" in r.json()["detail"]
 

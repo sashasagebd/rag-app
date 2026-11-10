@@ -69,14 +69,17 @@ python -m notebook.cli docs ml-papers
 
 Answers cite page numbers (PDF) or sections (HTML). Small notebooks (up to 15k tokens) send the whole notebook to the model; larger ones use retrieval. Limits (20 MB, 500 pages, 15 s downloads) and other settings are in `configs/notebook.toml`. Links to private or local network addresses are refused.
 
-**Run the web API locally** (the UI comes next):
+**Run the web app locally.** Requires Node 20+ for the UI. Put `APP_SECRET_KEY` in `.env` (see `.env.example`), then:
 
 ```bash
-export APP_SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(48))")   # or put it in .env
 APP_CONFIG=configs/app-dev.toml uvicorn api.app:create_app --factory --reload            # http://localhost:8000/docs
 python -m api.admin invite                     # a one-time invite code for signing up
 python -m api.admin server-key <username> on   # optional: let an account use the server's key
+
+cd web && npm install && npm run dev           # UI on http://localhost:5173 (talks to the API above)
 ```
+
+`npm run build` (in `web/`) produces `web/dist/`; the API then also serves the UI at http://localhost:8000.
 
 Each user signs up with an invite code and adds their own Anthropic API key in Settings; questions are billed to that key. Limits are in `configs/app.toml`.
 
@@ -140,6 +143,7 @@ configs/notebook.toml      notebook settings (the Phase 3 winner + upload limits
 src/notebook/              notebooks: safe URL fetch, upload checks, storage, ask, CLI
 src/api/                   web API (FastAPI): accounts, notebooks, uploads, asking; admin CLI
 configs/app.toml           web app limits (app-dev.toml for http://localhost)
+web/                       the web UI (React + TypeScript, Vite)
 results/                   one JSON per eval run
 db/schema.sql              collections + chunks tables
 src/retrieval/             (empty, not built yet)
