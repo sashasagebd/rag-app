@@ -10,9 +10,9 @@ If any file fails to parse, nothing is loaded.
 
 import argparse
 import sys
-import tomllib
 from pathlib import Path
 
+from common.config import load_config
 from ingest.chunk import chunk_docs, make_token_counter, write_chunks
 from ingest.embed_load import embed_and_load
 from ingest.parse import collect_inputs, parse_file, write_parsed
@@ -24,7 +24,7 @@ def main() -> int:
     parser.add_argument("--collection", required=True, help="collection name, e.g. dl-slides")
     parser.add_argument("--config", default="configs/default.toml")
     args = parser.parse_args()
-    config = tomllib.loads(Path(args.config).read_text())
+    config = load_config(args.config)
     paths = config["paths"]
 
     # 1. parse

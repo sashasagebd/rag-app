@@ -6,22 +6,23 @@ Usage (from the repo root):
 Loading a collection REPLACES its chunks (delete + insert in one transaction),
 so re-running after a re-chunk never leaves old and new chunks mixed.
 
-Embeddings are L2-normalized, so cosine similarity equals the dot product.
-Only passages are embedded here. Note for retrieval: bge models expect queries
-(not passages) to be prefixed with
-"Represent this sentence for searching relevant passages: ".
+Embeddings come from common/embedding.py (normalized, cached per text), so
+re-loading unchanged chunks skips the model entirely.
 """
 
 import argparse
 import json
 import os
 import sys
-import tomllib
 from pathlib import Path
 
 import psycopg
 from pgvector.psycopg import register_vector
 from psycopg.types.json import Jsonb
+
+from common.cache import Cache
+from common.config import load_config
+from common.embedding import embed
 
 SCHEMA = Path(__file__).resolve().parents[2] / "db" / "schema.sql"
 
@@ -36,14 +37,6 @@ def connect(url: str) -> psycopg.Connection:
     conn.execute(SCHEMA.read_text())
     register_vector(conn)
     return conn
-
-
-def embed(texts: list[str], model_name: str, batch_size: int):
-    """Return an (n, dim) numpy array of normalized embeddings."""
-    from sentence_transformers import SentenceTransformer  # slow import; only when needed
-
-    model = SentenceTransformer(model_name)
-    return model.encode(texts, batch_size=batch_size, normalize_embeddings=True, show_progress_bar=True)
 
 
 def load_collection(conn: psycopg.Connection, name: str, chunks: list[dict], embeddings) -> int:
@@ -75,7 +68,9 @@ def read_chunks(path: Path) -> list[dict]:
 
 def embed_and_load(chunks: list[dict], collection: str, config: dict) -> None:
     emb_cfg = config["embedding"]
-    embeddings = embed([c["text"] for c in chunks], emb_cfg["model"], emb_cfg["batch_size"])
+    cache = Cache(config["paths"]["cache_db"])
+    embeddings = embed([c["text"] for c in chunks], emb_cfg["model"], emb_cfg["batch_size"],
+                       cache=cache, progress=True)
     if embeddings.shape[1] != emb_cfg["dim"]:
         raise ValueError(f"model gives {embeddings.shape[1]}-dim vectors, config/schema expect {emb_cfg['dim']}")
     with connect(database_url(config)) as conn:
@@ -90,7 +85,7 @@ def main() -> int:
     parser.add_argument("--config", default="configs/default.toml")
     args = parser.parse_args()
 
-    config = tomllib.loads(Path(args.config).read_text())
+    config = load_config(args.config)
     path = Path(args.chunks or Path(config["paths"]["chunks_dir"]) / f"{args.collection}.jsonl")
     chunks = read_chunks(path)
     if not chunks:

@@ -9,7 +9,8 @@ dependencies = [
     "lxml>=5.0",                # fast parser backend for BeautifulSoup
     "psycopg[binary]>=3.2",     # Postgres driver
     "pgvector>=0.3",            # vector type adapters for psycopg
-    "sentence-transformers>=3.0",  # embeddings (not used yet)
+    "sentence-transformers>=3.0",  # local embeddings
+    "anthropic>=2.0",           # Claude API: answers and judging
 ]
 
 [project.optional-dependencies]

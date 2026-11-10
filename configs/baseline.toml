@@ -1,0 +1,24 @@
+# Phase 2 baseline. Overlays configs/default.toml (chunking: pack_sections, 500 tokens).
+#   python -m eval.run --corpus dl-slides --split dev --config configs/baseline.toml
+
+[retrieval]
+k = 5                          # chunks given to the answer model
+
+[answer]
+model = "claude-haiku-5-5"
+effort = "low"
+max_tokens = 4000
+
+[judge]
+model = "claude-haiku-5-5"     # re-judge with --judge-model claude-opus-5-5 to check it
+effort = "low"
+max_tokens = 2000
+
+# A retrieved chunk from a key doc counts as a hit for any source_ref citing a listed doc.
+# dl-s15 is the Guided Review deck that repeats S01–S13.
+[eval.alternate_sources]
+"dl-s15.html" = [
+  "dl-s01.html", "dl-s02.html", "dl-s03.html", "dl-s04.html", "dl-s05.html",
+  "dl-s06.html", "dl-s07.html", "dl-s08.html", "dl-s09.html", "dl-s10.html",
+  "dl-s11.html", "dl-s12.html", "dl-s13.html",
+]

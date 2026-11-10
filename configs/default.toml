@@ -4,6 +4,8 @@ raw_dir = "data/raw"
 parsed_dir = "data/parsed"
 chunks_dir = "data/chunks"
 questions_dir = "data/questions"
+cache_db = "data/cache/cache.sqlite"   # embeddings + LLM responses; delete to clear
+results_dir = "results"
 
 [chunking]
 # Name of a function in src/ingest/chunk.py's CHUNKERS table.
@@ -20,4 +22,15 @@ batch_size = 32
 # The DATABASE_URL environment variable overrides this.
 url = "postgresql://rag:rag@localhost:5433/rag"
 
-# Later: [retrieval] settings go here.
+# Dollars per million tokens (Anthropic list prices, Oct 2026). Used only to report run cost.
+[pricing.claude-haiku-5-5]
+input = 0.10
+output = 0.50
+
+[pricing.claude-sonnet-5-5]
+input = 2.00
+output = 10.00
+
+[pricing.claude-opus-5-5]
+input = 4.00
+output = 20.00

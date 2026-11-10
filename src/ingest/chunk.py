@@ -23,9 +23,10 @@ embedding sees which slide or section the text came from.
 import argparse
 import json
 import sys
-import tomllib
 from pathlib import Path
 from typing import Callable
+
+from common.config import load_config
 
 TokenCounter = Callable[[str], int]
 
@@ -164,7 +165,7 @@ def main() -> int:
     parser.add_argument("--config", default="configs/default.toml")
     args = parser.parse_args()
 
-    config = tomllib.loads(Path(args.config).read_text())
+    config = load_config(args.config)
     docs = [json.loads(p.read_text(encoding="utf-8")) for p in collect_parsed(args.inputs)]
     if not docs:
         print("no parsed JSON files found", file=sys.stderr)

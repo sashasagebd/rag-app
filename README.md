@@ -2,7 +2,7 @@
 
 A document Q&A app that answers **only** from the documents you provide, with citations, plus an evaluation harness that scores retrieval and answers against known-answer questions.
 
-**Status:** ingestion and the eval question set are built. Retrieval, answering and scoring are not built yet.
+**Status:** ingestion, retrieval, cited answering (Claude API) and the eval harness are built. Next: experiments.
 
 ## Setup
 
@@ -52,6 +52,22 @@ python -m ingest.chunk data/parsed --collection dl-slides   # -> data/chunks/dl-
 python -m ingest.embed_load --collection dl-slides          # -> Postgres
 ```
 
+**Set up the API key** (answers and judging use the Claude API). Put `ANTHROPIC_API_KEY=...` in `.env`, then check it:
+
+```bash
+python -m common.llm
+```
+
+**Search, or run the eval:**
+
+```bash
+python -m retrieval.search "how is the course graded?" --collection dl-slides
+python -m eval.run --corpus dl-slides --split dev --config configs/baseline.toml
+python -m eval.handcheck results/<run>.json        # check the judge by hand
+```
+
+Each run writes `results/<timestamp>_<corpus>_<split>.json` and prints scores per question category. Embeddings and LLM responses are cached in `data/cache/`, so re-running unchanged settings is free.
+
 **Validate eval questions:**
 
 ```bash
@@ -93,6 +109,12 @@ src/ingest/parse.py        PDF/HTML -> sections JSON
 src/ingest/chunk.py        sections -> chunks (pluggable chunkers)
 src/ingest/embed_load.py   chunks -> embeddings -> Postgres
 src/ingest/run.py          all three in one command
+src/common/                config, cache, embeddings, the one LLM call
+src/retrieval/search.py    top-k vector search
+src/answer/answer.py       cited answers from retrieved chunks
+src/eval/run.py            the eval harness (judge.py, metrics.py, handcheck.py beside it)
+configs/baseline.toml      the Phase 2 baseline settings
+results/                   one JSON per eval run
 db/schema.sql              collections + chunks tables
 src/retrieval/             (empty, not built yet)
 src/eval/validate_questions.py
