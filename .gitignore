@@ -11,6 +11,7 @@ data/parsed/*
 !data/parsed/.gitkeep
 data/chunks/
 data/cache/
+data/notebooks/
 
 # Local notes for Claude sessions
 CLAUDE.md

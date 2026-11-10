@@ -35,7 +35,7 @@ def chunk_covers_ref(chunk: dict, ref: dict, alternates: dict) -> bool:
     if chunk["doc"] == ref["doc"]:
         if "section" in ref:
             return ref["section"] in chunk["sections"]
-        return True  # page-only ref: chunks don't record pages yet (fine for this HTML corpus)
+        return ref["page"] in chunk.get("pages", [])
     return ref["doc"] in alternates.get(chunk["doc"], [])
 
 

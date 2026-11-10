@@ -2,7 +2,7 @@
 
 A document Q&A app that answers **only** from the documents you provide, with citations, plus an evaluation harness that scores retrieval and answers against known-answer questions.
 
-**Status:** ingestion, retrieval, cited answering (Claude API) and the eval harness are built. Next: experiments.
+**Status:** ingestion, retrieval, cited answering (Claude API), eval harness, experiments and notebooks (your own documents, CLI) are built. Next: the web app.
 
 ## Setup
 
@@ -57,6 +57,17 @@ python -m ingest.embed_load --collection dl-slides          # -> Postgres
 ```bash
 python -m common.llm
 ```
+
+**Notebooks: ask questions about your own documents** (PDF or HTML, files or links):
+
+```bash
+python -m notebook.cli create ml-papers
+python -m notebook.cli add ml-papers paper.pdf https://arxiv.org/pdf/1706.03762
+python -m notebook.cli ask ml-papers "How many attention heads does the base model use?" --show-sources
+python -m notebook.cli docs ml-papers
+```
+
+Answers cite page numbers (PDF) or sections (HTML). Small notebooks (up to 15k tokens) send the whole notebook to the model; larger ones use retrieval. Limits (20 MB, 500 pages, 15 s downloads) and other settings are in `configs/notebook.toml`. Links to private or local network addresses are refused.
 
 **Search, or run the eval:**
 
@@ -114,6 +125,8 @@ src/retrieval/search.py    top-k vector search
 src/answer/answer.py       cited answers from retrieved chunks
 src/eval/run.py            the eval harness (judge.py, metrics.py, handcheck.py beside it)
 configs/baseline.toml      the Phase 2 baseline settings
+configs/notebook.toml      notebook settings (the Phase 3 winner + upload limits)
+src/notebook/              notebooks: safe URL fetch, upload checks, storage, ask, CLI
 results/                   one JSON per eval run
 db/schema.sql              collections + chunks tables
 src/retrieval/             (empty, not built yet)

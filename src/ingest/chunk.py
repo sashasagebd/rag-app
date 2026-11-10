@@ -5,7 +5,7 @@ Usage (from the repo root):
 
 Output: <chunks_dir>/<collection>.jsonl, one chunk per line:
     {"chunk_key": "dl-s01.html#3", "doc": "dl-s01.html",
-     "sections": ["Course Introduction > Grading", ...],
+     "sections": ["Course Introduction > Grading", ...], "pages": [],
      "text": "...", "n_tokens": 412, "chunker": "pack_sections:500"}
 
 Chunkers are plain functions listed in CHUNKERS; config picks one by name.
@@ -83,33 +83,39 @@ def pack_sections(doc: dict, count_tokens: TokenCounter, max_tokens: int) -> lis
     """Pack consecutive sections of one document into chunks of up to max_tokens.
 
     A section is never split unless it alone exceeds max_tokens; then it is split
-    into pieces, each repeating the heading line.
+    into pieces, each repeating the heading line. Each chunk lists the distinct
+    section names and the PDF pages (empty for HTML) it covers.
     """
     chunks: list[dict] = []
     sections: list[str] = []
+    pages: list[int] = []
     blocks: list[str] = []
     used = 0
 
     def flush():
         nonlocal used
         if blocks:
-            chunks.append({"sections": list(sections), "text": "\n\n".join(blocks)})
+            chunks.append({"sections": list(dict.fromkeys(sections)), "pages": sorted(set(pages)),
+                           "text": "\n\n".join(blocks)})
         sections.clear()
+        pages.clear()
         blocks.clear()
         used = 0
 
     for section in doc["sections"]:
         block = section_block(section)
         size = count_tokens(block)
+        page = [section["page"]] if section.get("page") else []
         if size > max_tokens:  # oversized section: give it chunks of its own
             flush()
             heading = block.split("\n", 1)[0] + "\n" if section_name(section) else ""
             for piece in split_to_fit(section["text"], max_tokens - count_tokens(heading), count_tokens):
-                chunks.append({"sections": [section_name(section)], "text": heading + piece})
+                chunks.append({"sections": [section_name(section)], "pages": page, "text": heading + piece})
             continue
         if used + size > max_tokens:
             flush()
         sections.append(section_name(section))
+        pages.extend(page)
         blocks.append(block)
         used += size
     flush()
@@ -179,6 +185,7 @@ def chunk_docs(docs: list[dict], method: str, max_tokens: int, count_tokens: Tok
                 "chunk_key": f"{doc['source']}#{i}",
                 "doc": doc["source"],
                 "sections": c["sections"],
+                "pages": c.get("pages", []),
                 "text": text,
                 "n_tokens": count_tokens(text),
                 "chunker": label,

@@ -21,7 +21,7 @@ def test_packs_consecutive_sections_up_to_the_limit():
 
 def test_section_without_heading_has_no_heading_line():
     chunks = pack_sections(doc(([], "Session S01")), count_words, max_tokens=50)
-    assert chunks == [{"sections": [""], "text": "Session S01"}]
+    assert chunks == [{"sections": [""], "pages": [], "text": "Session S01"}]
 
 
 def test_oversized_section_is_split_and_each_piece_keeps_the_heading():
@@ -66,3 +66,9 @@ def test_clean_latex_keeps_original_section_names():
     assert c["text"] == "## A 1×1 conv\nmixes C channels"
     assert c["sections"] == [r"A \(1\times1\) conv"]
     assert c["chunker"] == "pack_sections:100+clean_latex"
+
+
+def test_pdf_pages_are_recorded_per_chunk():
+    d = {"source": "p.pdf", "sections": [{"page": p, "heading_path": [], "text": f"page {p} words"} for p in (1, 2, 3)]}
+    chunks = pack_sections(d, count_words, max_tokens=6)  # two pages fit per chunk
+    assert [(c["sections"], c["pages"]) for c in chunks] == [([""], [1, 2]), ([""], [3])]

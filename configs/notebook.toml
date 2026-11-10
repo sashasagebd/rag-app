@@ -1,0 +1,11 @@
+# Notebooks (Phase 4): the Phase 3 winner, plus limits for user uploads.
+#   python -m notebook.cli ...   (uses this file by default)
+extends = "configs/exp-e8-prompt-v2.toml"
+
+[notebook]
+max_file_mb = 20                 # per upload or downloaded URL
+max_pdf_pages = 500
+url_timeout_s = 15               # whole download, and each network step
+max_redirects = 3
+full_context_max_tokens = 15000  # notebooks this small skip retrieval: every chunk goes to the model
+storage_dir = "data/notebooks"   # original uploads, kept so a notebook can be re-ingested

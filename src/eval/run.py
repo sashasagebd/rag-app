@@ -139,7 +139,7 @@ def main() -> int:
             records.append({
                 **q,
                 "retrieved": [{"chunk_key": c["chunk_key"], "sections": c["sections"],
-                               "distance": round(c["distance"], 4)} for c in chunks],
+                               "distance": None if c["distance"] is None else round(c["distance"], 4)} for c in chunks],
                 "answer": ans["data"],
                 "judge": {"model": config["judge"]["model"], "verdict": verdict, "reason": reason},
                 "metrics": metrics,

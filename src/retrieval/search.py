@@ -7,6 +7,8 @@ Usage (from the repo root), to see what retrieval returns:
 Methods ([retrieval] method):
   vector  embed the question (bge query prefix) and rank chunks by cosine
           distance (pgvector's <=>). Lower distance = closer.
+  full    every chunk of the collection, in document order (small notebooks:
+          the whole thing fits in the prompt, so nothing is left to chance).
   hybrid  also run Postgres keyword search (full-text, any word may match,
           ranked by ts_rank_cd) and merge the two rankings with reciprocal
           rank fusion: score = sum over lists of 1 / (60 + rank). Exact terms
@@ -33,7 +35,7 @@ from ingest.embed_load import connect, database_url
 RRF_K = 60  # standard reciprocal-rank-fusion constant
 
 VECTOR_SQL = """
-SELECT ch.chunk_key, ch.doc, ch.sections, ch.text, ch.embedding <=> %(qvec)s AS distance
+SELECT ch.chunk_key, ch.doc, ch.sections, ch.text, ch.pages, ch.embedding <=> %(qvec)s AS distance
 FROM chunks ch JOIN collections co ON co.id = ch.collection_id
 WHERE co.name = %(collection)s
 ORDER BY distance
@@ -62,22 +64,32 @@ fused AS (
     FROM (SELECT * FROM vec UNION ALL SELECT * FROM kw) ranked
     GROUP BY id
 )
-SELECT b.chunk_key, b.doc, b.sections, b.text, b.embedding <=> %(qvec)s AS distance
+SELECT b.chunk_key, b.doc, b.sections, b.text, b.pages, b.embedding <=> %(qvec)s AS distance
 FROM fused f JOIN base b ON b.id = f.id
 ORDER BY f.score DESC
 LIMIT %(limit)s
 """
 
 
+FULL_SQL = """
+SELECT ch.chunk_key, ch.doc, ch.sections, ch.text, ch.pages, NULL::float AS distance
+FROM chunks ch JOIN collections co ON co.id = ch.collection_id
+WHERE co.name = %(collection)s
+ORDER BY ch.doc, split_part(ch.chunk_key, '#', 2)::int
+"""
+
+
 def retrieve(conn: psycopg.Connection, collection: str, question: str, qvec, limit: int,
              method: str = "vector") -> list[dict]:
-    """The database step: given the question and its embedding, the top `limit` chunks."""
-    sql = {"vector": VECTOR_SQL, "hybrid": HYBRID_SQL}.get(method)
+    """The database step: given the question and its embedding, the top `limit` chunks.
+    method "full" ignores the question and returns every chunk, in document order."""
+    sql = {"vector": VECTOR_SQL, "hybrid": HYBRID_SQL, "full": FULL_SQL}.get(method)
     if sql is None:
         raise ValueError(f"unknown retrieval method: {method}")
     params = {"qvec": qvec, "collection": collection, "question": question, "limit": limit,
               "pool": max(limit, 20), "rrf_k": RRF_K}
-    return [{"chunk_key": r[0], "doc": r[1], "sections": r[2], "text": r[3], "distance": float(r[4])}
+    return [{"chunk_key": r[0], "doc": r[1], "sections": r[2], "text": r[3], "pages": r[4],
+             "distance": None if r[5] is None else float(r[5])}
             for r in conn.execute(sql, params).fetchall()]
 
 
@@ -116,7 +128,10 @@ def rerank(question: str, chunks: list[dict], model_name: str, k: int, cache: Ca
 def search(conn: psycopg.Connection, collection: str, question: str, k: int, model_name: str,
            cache: Cache | None = None, method: str = "vector", rerank_model: str | None = None,
            rerank_candidates: int = 20) -> list[dict]:
-    """Return up to k chunks, best first. Each has its cosine distance (and rerank_score if reranked)."""
+    """Return up to k chunks, best first. Each has its cosine distance (and rerank_score if reranked).
+    method "full" returns the whole collection instead: no embedding, no k, no reranking."""
+    if method == "full":
+        return retrieve(conn, collection, question, None, 0, "full")
     [qvec] = embed([QUERY_PREFIX + question], model_name, cache=cache)
     limit = max(k, rerank_candidates) if rerank_model else k
     chunks = retrieve(conn, collection, question, qvec, limit, method)

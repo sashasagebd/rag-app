@@ -75,3 +75,9 @@ def test_alternatives_count_as_one_needed_source():
     assert m["citation_supports"]
     single = score_question(q("exact", [alt]), chunks, {"found": True, "answer": "...", "citations": []}, "correct", ALT)
     assert single["recall"] == 1.0  # one alternative found = fully covered
+
+
+def test_page_only_ref_matches_on_page():
+    c = dict(chunk("p#0", "p.pdf", ""), pages=[3, 4])
+    assert chunk_covers_ref(c, {"doc": "p.pdf", "page": 4}, ALT)
+    assert not chunk_covers_ref(c, {"doc": "p.pdf", "page": 5}, ALT)

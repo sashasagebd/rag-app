@@ -64,9 +64,9 @@ def push_heading(stack: list[tuple[int, str]], level: int, title: str) -> None:
 
 # ---------- PDF ----------
 
-def parse_pdf(path: Path) -> list[dict]:
+def parse_pdf(data: bytes) -> list[dict]:
     sections = []
-    with pymupdf.open(path) as doc:
+    with pymupdf.open(stream=data, filetype="pdf") as doc:
         toc = doc.get_toc(simple=True)  # [[level, title, page_number], ...], pages are 1-based
         stack: list[tuple[int, str]] = []
         toc_i = 0
@@ -88,8 +88,8 @@ def parse_pdf(path: Path) -> list[dict]:
 
 # ---------- HTML ----------
 
-def parse_html(path: Path) -> list[dict]:
-    soup = BeautifulSoup(path.read_bytes(), "lxml")
+def parse_html(data: bytes) -> list[dict]:
+    soup = BeautifulSoup(data, "lxml")
     for tag in soup(DROP_TAGS):
         tag.decompose()
     root = soup.body or soup
@@ -137,9 +137,14 @@ def parse_file(path: Path) -> dict:
     doc_type = SUFFIX_TO_TYPE.get(path.suffix.lower())
     if doc_type is None:
         raise ValueError(f"unsupported file type: {path.name}")
-    sections = parse_pdf(path) if doc_type == "pdf" else parse_html(path)
+    return parse_bytes(path.read_bytes(), path.name, doc_type)
+
+
+def parse_bytes(data: bytes, source: str, doc_type: str) -> dict:
+    """Parse a document held in memory (e.g. an upload). doc_type is "pdf" or "html"."""
+    sections = parse_pdf(data) if doc_type == "pdf" else parse_html(data)
     return {
-        "source": path.name,
+        "source": source,
         "doc_type": doc_type,
         "parsed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sections": sections,

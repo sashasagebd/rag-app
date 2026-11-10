@@ -15,12 +15,12 @@ max_tokens = 500
 
 [embedding]
 model = "BAAI/bge-small-en-v1.5"   # reads up to 512 tokens
-dim = 384                          # must match vector(384) in db/schema.sql
+dim = 384                          # the model's output size; checked at load time
 batch_size = 32
 
 [retrieval]
 k = 5                 # chunks given to the answer model
-method = "vector"     # "vector" or "hybrid" (vector + keyword, rank fusion)
+method = "vector"     # "vector", "hybrid" (vector + keyword, rank fusion) or "full" (every chunk)
 # collection = "..."  # default: the corpus name
 # rerank_model = "BAAI/bge-reranker-base"   # optional cross-encoder rerank
 # rerank_candidates = 20                    # how many chunks it re-scores

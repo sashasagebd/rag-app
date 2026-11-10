@@ -49,17 +49,22 @@ def load_collection(conn: psycopg.Connection, name: str, chunks: list[dict], emb
             (name,),
         ).fetchone()[0]
         conn.execute("DELETE FROM chunks WHERE collection_id = %s", (collection_id,))
-        with conn.cursor() as cur:
-            cur.executemany(
-                "INSERT INTO chunks (collection_id, chunk_key, doc, sections, text, n_tokens, chunker, embedding) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                [
-                    (collection_id, c["chunk_key"], c["doc"], Jsonb(c["sections"]), c["text"],
-                     c["n_tokens"], c["chunker"], emb)
-                    for c, emb in zip(chunks, embeddings)
-                ],
-            )
+        insert_chunks(conn, collection_id, chunks, embeddings)
     return collection_id
+
+
+def insert_chunks(conn: psycopg.Connection, collection_id: int, chunks: list[dict], embeddings) -> None:
+    """Insert chunk rows (call inside a transaction)."""
+    with conn.cursor() as cur:
+        cur.executemany(
+            "INSERT INTO chunks (collection_id, chunk_key, doc, sections, pages, text, n_tokens, chunker, embedding) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            [
+                (collection_id, c["chunk_key"], c["doc"], Jsonb(c["sections"]), Jsonb(c.get("pages", [])), c["text"],
+                 c["n_tokens"], c["chunker"], emb)
+                for c, emb in zip(chunks, embeddings)
+            ],
+        )
 
 
 def read_chunks(path: Path) -> list[dict]:

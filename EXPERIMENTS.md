@@ -63,6 +63,19 @@ Results file: `results/20261110-223529_dl-slides_test_final.json`. It records `d
 
 **E8, prompt v2.** Targets the observed failure: v2 tells the model that a premise the documents contradict is an answer, and that "not found" is only for questions the documents say nothing about. Fixed dl-007 and dl-048 with Haiku at no extra cost. Every answerable dev question is now correct, and it still abstains on every unanswerable one, including dl-051, whose retrieved chunks (computation-graph slides about "nodes") are a deliberate near-miss for v2's "only when the documents say nothing relevant" rule. Caveat: v2 was written after seeing dev failures, so dev overstates it; the test split is the real check.
 
+## Phase 4 check: whole document vs. retrieval (dev)
+
+Notebooks under `[notebook] full_context_max_tokens` (15,000) skip retrieval and send every chunk. To check that route, each dev question whose sources are all in **one** deck (22 questions) was answered from that whole deck (2k–12k tokens), Haiku + prompt v2, and compared with the E8 winner's retrieval answers over the full corpus.
+
+| route | correct | single_fact + exact (18) | adversarial (4) | cost/question |
+|---|---|---|---|---|
+| whole deck | 20/22 | 18/18 | **2/4** | ~0.1–0.2¢ |
+| retrieval (E8) | 22/22 | 18/18 | 4/4 | ~0.05¢ + ~5 s rerank |
+
+Both misses are the false-premise failure prompt v2 fixed for retrieval: given a whole deck, Haiku answered "not found" to dl-007 ("how much is the final exam worth?") and dl-045 (does dividing by √d_k change which key wins?). Facts are unaffected. Small sample, but consistent. What the eval can't show is the whole-document route's strength: questions about the document as a whole ("summarize this paper", "what are the main sections?"), which retrieval's 10 chunks can't answer.
+
+**Decision (owner): keep the whole-document route for small notebooks** (option A), because document-level questions matter for notebooks. Improving false-premise handling with long contexts is an open item, to be tested on dev.
+
 ## Label fixes found by experiments
 
 - **Scoring change**: a `source_refs` entry may now be a list of alternatives (the same fact on several slides; any one is enough). Before, a second source added as a plain ref counted as *required*, halving recall when retrieval found either one.
@@ -73,5 +86,6 @@ Results file: `results/20261110-223529_dl-slides_test_final.json`. It records `d
 ## Open items
 
 - **Test run**: done (see Final result). Don't re-tune against it; a new idea gets evaluated on dev first.
+- **False premises with long contexts**: whole-document answers miss 2/4 adversarial dev questions ("not found" instead of a correction). Try a prompt variant on the whole-deck setup from the Phase 4 check.
 - **Multi-hop completeness**: the only test miss (dl-037) listed one of three items. Candidates for a later dev experiment: a prompt line about answering every part of the question, or a less strict length limit than "one to three sentences".
 - **Latency**: reranking 30 short chunks is ~5 s per question on the laptop CPU, more on the homelab. Options before Phase 5: fewer candidates, a smaller cross-encoder, or accept it.
