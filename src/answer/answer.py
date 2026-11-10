@@ -13,7 +13,7 @@ from common.llm import complete_json
 
 NOT_FOUND = "Not found in the provided documents."
 
-SYSTEM = f"""You answer questions using only the documents in the user's message.
+SYSTEM_V1 = f"""You answer questions using only the documents in the user's message.
 
 Rules:
 - Use only information stated in the <document> blocks. Do not use outside knowledge, even if you know the answer.
@@ -22,6 +22,19 @@ Rules:
 - If the documents do not contain the answer, set "found" to false, "answer" to "{NOT_FOUND}", and "citations" to [].
 - If the question assumes something the documents contradict, say so and give the correct information from the documents.
 - Answer in one to three sentences."""
+
+# v2 (experiment E8): "not found" was being used for false premises, e.g. "how much is the
+# final exam worth?" when the documents say there is no final exam. That is an answer.
+SYSTEM_V2 = SYSTEM_V1.replace(
+    "- If the question assumes something the documents contradict, say so and give the correct information from the documents.",
+    "- If the question assumes something the documents contradict (for example, it asks about something the "
+    "documents say does not exist, or claims something works in a way the documents say it does not), that is "
+    'not "not found": set "found" to true, say the premise is wrong, and give the correct information with citations.\n'
+    '- Use "not found" only when the documents say nothing relevant to the question.',
+)
+
+PROMPTS = {"v1": SYSTEM_V1, "v2": SYSTEM_V2}
+SYSTEM = SYSTEM_V1  # the default
 
 SCHEMA = {
     "type": "object",
@@ -43,8 +56,8 @@ def build_user_message(question: str, chunks: list[dict]) -> str:
 
 
 def answer_question(question: str, chunks: list[dict], *, model: str, effort: str,
-                    max_tokens: int, cache=None) -> dict:
+                    max_tokens: int, cache=None, prompt: str = "v1") -> dict:
     return complete_json(
-        model=model, system=SYSTEM, user=build_user_message(question, chunks),
+        model=model, system=PROMPTS[prompt], user=build_user_message(question, chunks),
         schema=SCHEMA, effort=effort, max_tokens=max_tokens, cache=cache,
     )

@@ -5,7 +5,8 @@ Usage (from the repo root):
     python -m eval.run --corpus dl-slides --split dev --judge-model claude-opus-5-5   # re-judge
     python -m eval.run --corpus dl-slides --split dev --limit 3                       # quick smoke test
 
-The collection searched is the one named like the corpus. Writes
+The collection searched is [retrieval].collection, or the one named like the
+corpus if unset (experiments with their own chunking get their own). Writes
 results/<timestamp>_<corpus>_<split>[_<tag>].json with the git commit, the full
 merged config, cost, aggregate scores (overall and per category) and every
 question's retrieved chunks, answer and verdict.
@@ -29,7 +30,7 @@ from common.llm import cost_usd
 from eval.judge import judge
 from eval.metrics import score_question, summarize
 from ingest.embed_load import connect, database_url
-from retrieval.search import search
+from retrieval.search import search_from_config
 
 
 def git_info() -> dict:
@@ -107,7 +108,8 @@ def main() -> int:
         print(f"no questions for corpus={args.corpus} split={args.split}", file=sys.stderr)
         return 1
 
-    k, emb_model = config["retrieval"]["k"], config["embedding"]["model"]
+    k = config["retrieval"]["k"]
+    collection = config["retrieval"].get("collection", args.corpus)  # experiments may use their own
     alternates = config.get("eval", {}).get("alternate_sources", {})
     cache = Cache(config["paths"]["cache_db"])
     costs = CostTracker(config["pricing"])
@@ -115,14 +117,14 @@ def main() -> int:
 
     with connect(database_url(config)) as conn:
         for i, q in enumerate(questions, 1):
-            chunks = search(conn, args.corpus, q["question"], k, emb_model, cache)
+            chunks = search_from_config(conn, config, collection, q["question"], cache)
             if not chunks:
-                print(f"collection '{args.corpus}' is empty: run ingest.run first", file=sys.stderr)
+                print(f"collection '{collection}' is empty: run ingest.run first", file=sys.stderr)
                 return 1
 
             a_cfg = config["answer"]
             ans = answer_question(q["question"], chunks, model=a_cfg["model"], effort=a_cfg["effort"],
-                                  max_tokens=a_cfg["max_tokens"], cache=cache)
+                                  max_tokens=a_cfg["max_tokens"], cache=cache, prompt=a_cfg.get("prompt", "v1"))
             costs.add("answer", a_cfg["model"], ans)
 
             verdict = reason = None
@@ -152,7 +154,8 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{stamp}_{args.corpus}_{args.split}{'_' + args.tag if args.tag else ''}.json"
     result = {
-        "run": {"timestamp": stamp, "corpus": args.corpus, "split": args.split, "config_file": args.config,
+        "run": {"timestamp": stamp, "corpus": args.corpus, "collection": collection, "split": args.split,
+                "config_file": args.config,
                 "limit": args.limit, "git": git_info()},
         "config": config,
         "cost": {"usd_spent": costs.total("usd_spent"), "usd_if_uncached": costs.total("usd_if_uncached"),

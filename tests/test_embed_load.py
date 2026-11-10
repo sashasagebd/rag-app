@@ -55,3 +55,17 @@ def test_reload_replaces_the_collection(conn):
     assert load_collection(conn, NAME, [chunk("new")], [unit(2)]) == cid
     keys = [r[0] for r in conn.execute("SELECT chunk_key FROM chunks WHERE collection_id = %s", (cid,))]
     assert keys == ["new"]
+
+
+def test_hybrid_finds_a_keyword_match_the_vector_ranks_last(conn):
+    from retrieval.search import retrieve
+
+    chunks = [dict(chunk(f"c{i}"), text=t) for i, t in enumerate(
+        ["attention scores and softmax", "residual blocks add the input", "LeNet-5 has 61,706 parameters"])]
+    # The query vector is closest to c0, then c1; c2 (the keyword match) is farthest.
+    q = unit(0) + 0.5 * unit(1)
+    load_collection(conn, NAME, chunks, [unit(0), unit(1), unit(2)])
+    vector = [c["chunk_key"] for c in retrieve(conn, NAME, "How many parameters does LeNet have?", q, 2, "vector")]
+    hybrid = [c["chunk_key"] for c in retrieve(conn, NAME, "How many parameters does LeNet have?", q, 2, "hybrid")]
+    assert vector == ["c0", "c1"]
+    assert "c2" in hybrid

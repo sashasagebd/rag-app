@@ -1,0 +1,10 @@
+# E6: larger embedding model, bge-base (768 dims, ~3x slower) instead of bge-small (384).
+# Ingest: python -m ingest.run data/raw/notes --collection dl-slides-bge-base --config configs/exp-e6-bge-base.toml
+extends = "configs/baseline.toml"
+
+[embedding]
+model = "BAAI/bge-base-en-v1.5"
+dim = 768
+
+[retrieval]
+collection = "dl-slides-bge-base"

@@ -1,0 +1,2739 @@
+{
+  "run": {
+    "timestamp": "20261110-221943",
+    "corpus": "dl-slides",
+    "collection": "dl-slides-c200",
+    "split": "dev",
+    "config_file": "configs/exp-c1-c200-rerank.toml",
+    "limit": null,
+    "git": {
+      "commit": "86ea9e129f601003d6e96be02819e29a2e58915d",
+      "dirty": true
+    }
+  },
+  "config": {
+    "paths": {
+      "raw_dir": "data/raw",
+      "parsed_dir": "data/parsed",
+      "chunks_dir": "data/chunks",
+      "questions_dir": "data/questions",
+      "cache_db": "data/cache/cache.sqlite",
+      "results_dir": "results"
+    },
+    "chunking": {
+      "method": "pack_sections",
+      "max_tokens": 200
+    },
+    "embedding": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "dim": 384,
+      "batch_size": 32
+    },
+    "retrieval": {
+      "k": 5,
+      "method": "vector",
+      "collection": "dl-slides-c200",
+      "rerank_model": "BAAI/bge-reranker-base",
+      "rerank_candidates": 20
+    },
+    "database": {
+      "url": "postgresql://rag:rag@localhost:5433/rag"
+    },
+    "pricing": {
+      "claude-haiku-5-5": {
+        "input": 0.1,
+        "output": 0.5
+      },
+      "claude-sonnet-5-5": {
+        "input": 2.0,
+        "output": 10.0
+      },
+      "claude-opus-5-5": {
+        "input": 4.0,
+        "output": 20.0
+      }
+    },
+    "answer": {
+      "model": "claude-haiku-5-5",
+      "effort": "low",
+      "max_tokens": 4000
+    },
+    "judge": {
+      "model": "claude-haiku-5-5",
+      "effort": "low",
+      "max_tokens": 2000
+    },
+    "eval": {
+      "alternate_sources": {
+        "dl-s15.html": [
+          "dl-s01.html",
+          "dl-s02.html",
+          "dl-s03.html",
+          "dl-s04.html",
+          "dl-s05.html",
+          "dl-s06.html",
+          "dl-s07.html",
+          "dl-s08.html",
+          "dl-s09.html",
+          "dl-s10.html",
+          "dl-s11.html",
+          "dl-s12.html",
+          "dl-s13.html"
+        ]
+      }
+    }
+  },
+  "cost": {
+    "usd_spent": 0.0116,
+    "usd_if_uncached": 0.0117,
+    "by_role": {
+      "answer": {
+        "model": "claude-haiku-5-5",
+        "calls": 35,
+        "cached": 0,
+        "input_tokens": 58520,
+        "output_tokens": 5073,
+        "usd_spent": 0.008388500000000002,
+        "usd_if_uncached": 0.008388500000000002
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "calls": 27,
+        "cached": 1,
+        "input_tokens": 19955,
+        "output_tokens": 2731,
+        "usd_spent": 0.0032583999999999994,
+        "usd_if_uncached": 0.003361
+      }
+    }
+  },
+  "summary": {
+    "overall": {
+      "n_answerable": 30,
+      "n_unanswerable": 5,
+      "hit_at_k": 0.9,
+      "recall_at_k": 0.825,
+      "mrr": 0.725,
+      "correct": 0.833,
+      "partial": 0.067,
+      "false_abstention": 0.1,
+      "correct_abstention": 1,
+      "citations_valid": 1,
+      "citation_supports": 0.926
+    },
+    "by_category": {
+      "adversarial": {
+        "n_answerable": 5,
+        "n_unanswerable": 0,
+        "hit_at_k": 1,
+        "recall_at_k": 0.9,
+        "mrr": 0.9,
+        "correct": 0.8,
+        "partial": 0.2,
+        "false_abstention": 0,
+        "correct_abstention": null,
+        "citations_valid": 1,
+        "citation_supports": 1
+      },
+      "exact": {
+        "n_answerable": 6,
+        "n_unanswerable": 0,
+        "hit_at_k": 0.833,
+        "recall_at_k": 0.833,
+        "mrr": 0.75,
+        "correct": 0.833,
+        "partial": 0,
+        "false_abstention": 0.167,
+        "correct_abstention": null,
+        "citations_valid": 1,
+        "citation_supports": 0.8
+      },
+      "multi_hop": {
+        "n_answerable": 7,
+        "n_unanswerable": 0,
+        "hit_at_k": 1,
+        "recall_at_k": 0.75,
+        "mrr": 0.786,
+        "correct": 0.714,
+        "partial": 0.143,
+        "false_abstention": 0.143,
+        "correct_abstention": null,
+        "citations_valid": 1,
+        "citation_supports": 1
+      },
+      "single_fact": {
+        "n_answerable": 12,
+        "n_unanswerable": 0,
+        "hit_at_k": 0.833,
+        "recall_at_k": 0.833,
+        "mrr": 0.604,
+        "correct": 0.917,
+        "partial": 0,
+        "false_abstention": 0.083,
+        "correct_abstention": null,
+        "citations_valid": 1,
+        "citation_supports": 0.909
+      },
+      "unanswerable": {
+        "n_answerable": 0,
+        "n_unanswerable": 5,
+        "hit_at_k": null,
+        "recall_at_k": null,
+        "mrr": null,
+        "correct": null,
+        "partial": null,
+        "false_abstention": null,
+        "correct_abstention": 1,
+        "citations_valid": null,
+        "citation_supports": null
+      }
+    }
+  },
+  "questions": [
+    {
+      "id": "dl-001",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What percentage of the final grade do the module quizzes count for?",
+      "expected_answer": "15%, for both CS 4715 and CS 5715 (four quizzes, equally weighted, none dropped).",
+      "source_refs": [
+        {
+          "doc": "dl-s01.html",
+          "section": "Course Introduction > Grading"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s01.html#9",
+          "sections": [
+            "Course Introduction > Grading"
+          ],
+          "distance": 0.2884
+        },
+        {
+          "chunk_key": "dl-s01.html#10",
+          "sections": [
+            "Course Introduction > Quizzes and the late policy"
+          ],
+          "distance": 0.3428
+        },
+        {
+          "chunk_key": "dl-s12.html#44",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > The task behind today's measurements: S10's XOR-quadrant miniature"
+          ],
+          "distance": 0.3727
+        },
+        {
+          "chunk_key": "dl-s23.html#1",
+          "sections": [
+            "Autoencoders & VAEs > Quiz 3 is at the end of class, and the proposal is due this Friday"
+          ],
+          "distance": 0.3607
+        },
+        {
+          "chunk_key": "dl-s13.html#62",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Quiz 2 · the final 30 minutes (6:45–7:15 PM)"
+          ],
+          "distance": 0.3716
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The module quizzes count for 15% of the final grade in both CS 4715 (UG) and CS 5715 (grad), with four quizzes equally weighted and none dropped.",
+        "citations": [
+          "dl-s01.html#9"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states 15% for both CS 4715 and CS 5715, with four equally weighted quizzes and none dropped, matching the reference answer exactly."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-002",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Why is LoRA's B matrix initialized to zero while A is random?",
+      "expected_answer": "So that BA = 0 at step 0 and the layer computes exactly the pretrained output Wx, while training can still move: with A random, B's gradient is nonzero. If both A and B were zero, neither would ever receive a gradient.",
+      "source_refs": [
+        {
+          "doc": "dl-s19.html",
+          "section": "Fine-Tuning & LoRA > With \\(B=0\\) at initialization, training starts at the pretrained model"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s19.html#30",
+          "sections": [
+            "Fine-Tuning & LoRA > With \\(B=0\\) at initialization, training starts at the pretrained model"
+          ],
+          "distance": 0.2368
+        },
+        {
+          "chunk_key": "dl-s19.html#29",
+          "sections": [
+            "Fine-Tuning & LoRA > With \\(B=0\\) at initialization, training starts at the pretrained model"
+          ],
+          "distance": 0.2314
+        },
+        {
+          "chunk_key": "dl-s19.html#35",
+          "sections": [
+            "Fine-Tuning & LoRA > So one factor must start nonzero: with \\(B=0\\) both train, with \\(A=B=0\\) neither moves"
+          ],
+          "distance": 0.2719
+        },
+        {
+          "chunk_key": "dl-s19.html#36",
+          "sections": [
+            "Fine-Tuning & LoRA > So one factor must start nonzero: with \\(B=0\\) both train, with \\(A=B=0\\) neither moves"
+          ],
+          "distance": 0.2591
+        },
+        {
+          "chunk_key": "dl-s19.html#37",
+          "sections": [
+            "Fine-Tuning & LoRA > So one factor must start nonzero: with \\(B=0\\) both train, with \\(A=B=0\\) neither moves"
+          ],
+          "distance": 0.2798
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "Initializing B to zero makes BA = 0, so at step 0 the layer computes exactly Wx, the pretrained output, while a random A keeps B's gradient nonzero (since Ax ≠ 0) so training can proceed. If both were zero, neither matrix would ever move, because B's gradient carries the factor Ax = 0 and A's carries the factor B = 0.",
+        "citations": [
+          "dl-s19.html#29",
+          "dl-s19.html#30",
+          "dl-s19.html#35",
+          "dl-s19.html#36"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer gives the same key facts as the reference: BA=0 at step 0 so output equals Wx, random A makes B's gradient nonzero, and all-zero init would block gradients for both. It adds correct detail about the gradient factors Ax and B."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-003",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Over which dimension does LayerNorm compute its mean and variance?",
+      "expected_answer": "Over the features of each sample (dim=-1): one mean and variance per row, broadcast within that row.",
+      "source_refs": [
+        {
+          "doc": "dl-s07.html",
+          "section": "Regularization, Initialization, Normalization > LayerNorm: reduce over features, then broadcast within each row"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s07.html#28",
+          "sections": [
+            "Regularization, Initialization, Normalization > Normalization starts by choosing a group of values"
+          ],
+          "distance": 0.3058
+        },
+        {
+          "chunk_key": "dl-s07.html#39",
+          "sections": [
+            "Regularization, Initialization, Normalization > Read the arrays, choose the axes, identify the code"
+          ],
+          "distance": 0.2684
+        },
+        {
+          "chunk_key": "dl-s16.html#82",
+          "sections": [
+            "Transformer I > Layer normalization standardizes each token's own feature vector"
+          ],
+          "distance": 0.2734
+        },
+        {
+          "chunk_key": "dl-s16.html#85",
+          "sections": [
+            "Transformer I > Self-check on LayerNorm, the FFN and the whole block"
+          ],
+          "distance": 0.2698
+        },
+        {
+          "chunk_key": "dl-s16.html#81",
+          "sections": [
+            "Transformer I > Layer normalization standardizes each token's own feature vector"
+          ],
+          "distance": 0.2795
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "LayerNorm computes its mean and variance over the feature dimension of each item (each row, or each token's own d_model features), not across the batch. For example, over the final C features of each sample, and over a token's d_model features in a (B, T, d_model) input.",
+        "citations": [
+          "dl-s07.html#28",
+          "dl-s07.html#39",
+          "dl-s16.html#81",
+          "dl-s16.html#82"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states LayerNorm computes mean and variance over the feature dimension of each sample/row (per token's d_model features), matching the reference's features of each sample (dim=-1), with one mean and variance per row."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": false,
+        "recall": 0.0,
+        "rr": 0.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": false
+      }
+    },
+    {
+      "id": "dl-004",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "According to Chinchilla, roughly how many training tokens per parameter is compute-optimal?",
+      "expected_answer": "About 20 tokens per parameter.",
+      "source_refs": [
+        {
+          "doc": "dl-s18.html",
+          "section": "LLM Pretraining > With equal exponents, every budget gets 20 tokens per parameter"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s18.html#62",
+          "sections": [
+            "LLM Pretraining > Chinchilla (2022) found that \\(N\\) and \\(D\\) both grow roughly as \\(C^{0.5}\\)"
+          ],
+          "distance": 0.1613
+        },
+        {
+          "chunk_key": "dl-s18.html#61",
+          "sections": [
+            "LLM Pretraining > Chinchilla (2022) found that \\(N\\) and \\(D\\) both grow roughly as \\(C^{0.5}\\)"
+          ],
+          "distance": 0.1778
+        },
+        {
+          "chunk_key": "dl-s18.html#78",
+          "sections": [
+            "LLM Pretraining > Self-check on a budget's split, a ratio of 2 and a model you will serve"
+          ],
+          "distance": 0.2086
+        },
+        {
+          "chunk_key": "dl-s18.html#60",
+          "sections": [
+            "LLM Pretraining > Chinchilla (2022) found that \\(N\\) and \\(D\\) both grow roughly as \\(C^{0.5}\\)"
+          ],
+          "distance": 0.2308
+        },
+        {
+          "chunk_key": "dl-s18.html#72",
+          "sections": [
+            "LLM Pretraining > Serving costs about \\(2N\\) per token, a reason to train smaller past 20:1"
+          ],
+          "distance": 0.1826
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "According to the documents, Chinchilla's compute-optimal rule of thumb is about 20 training tokens per parameter (1.4×10^12 tokens / 7×10^10 parameters = 20), rather than the roughly 1 token per parameter used by Gopher.",
+        "citations": [
+          "dl-s18.html#62",
+          "dl-s18.html#61"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model states the compute-optimal ratio is about 20 training tokens per parameter, matching the reference answer; the extra details (1.4T tokens, 70B parameters, Gopher comparison) are consistent with the Chinchilla paper and do not contradict the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": false,
+        "recall": 0.0,
+        "rr": 0.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": false
+      }
+    },
+    {
+      "id": "dl-005",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "HW1 is due in the session that covers which topic?",
+      "expected_answer": "PyTorch in Practice (S08). HW1 is released in S04 and due in S08.",
+      "source_refs": [
+        {
+          "doc": "dl-s04.html",
+          "section": "Backpropagation I > HW1: deadline and points"
+        },
+        {
+          "doc": "dl-s08.html",
+          "section": "PyTorch in Practice > Admin: HW1 is due today"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s08.html#0",
+          "sections": [
+            "",
+            "PyTorch in Practice",
+            "PyTorch in Practice > Admin: HW1 is due today"
+          ],
+          "distance": 0.3019
+        },
+        {
+          "chunk_key": "dl-s01.html#13",
+          "sections": [
+            "Course Introduction > For next time"
+          ],
+          "distance": 0.3164
+        },
+        {
+          "chunk_key": "dl-s04.html#3",
+          "sections": [
+            "Backpropagation I > HW1: start today, finish after session five"
+          ],
+          "distance": 0.3461
+        },
+        {
+          "chunk_key": "dl-s04.html#2",
+          "sections": [
+            "Backpropagation I > HW1: deadline and points",
+            "Backpropagation I > HW1: policy, and a sanity check"
+          ],
+          "distance": 0.3642
+        },
+        {
+          "chunk_key": "dl-s22.html#1",
+          "sections": [
+            "Vision Transformers & Multimodal Models > HW3 is due today, and Quiz 3 is next session"
+          ],
+          "distance": 0.3253
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "HW1 is due in Session S08, which covers PyTorch in Practice, described as turning tensors, modules, data, and an optimizer into one reliable program.",
+        "citations": [
+          "dl-s08.html#0",
+          "dl-s04.html#2"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model correctly identifies S08 and the topic PyTorch in Practice, matching the reference answer's key facts; the extra description is consistent and not contradictory."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-006",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What techniques does the course recommend for preventing mode collapse when training a GAN?",
+      "expected_answer": null,
+      "source_refs": [],
+      "category": "unanswerable",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s23.html#93",
+          "sections": [
+            "Autoencoders & VAEs > For next time"
+          ],
+          "distance": 0.2446
+        },
+        {
+          "chunk_key": "dl-s23.html#81",
+          "sections": [
+            "Autoencoders & VAEs > The collapse test trains the same model once on each dataset"
+          ],
+          "distance": 0.2977
+        },
+        {
+          "chunk_key": "dl-s23.html#82",
+          "sections": [
+            "Autoencoders & VAEs > The collapse test trains the same model once on each dataset"
+          ],
+          "distance": 0.3054
+        },
+        {
+          "chunk_key": "dl-s23.html#80",
+          "sections": [
+            "Autoencoders & VAEs > The collapse test trains the same model once on each dataset"
+          ],
+          "distance": 0.2648
+        },
+        {
+          "chunk_key": "dl-s01.html#0",
+          "sections": [
+            "",
+            "Course Introduction",
+            "Course Introduction > What this course is"
+          ],
+          "distance": 0.3073
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true
+      }
+    },
+    {
+      "id": "dl-007",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How much is the final exam worth compared with the module quizzes?",
+      "expected_answer": "There is no final exam (and no midterm); the four module quizzes replace them and are worth 15% of the grade.",
+      "source_refs": [
+        {
+          "doc": "dl-s01.html",
+          "section": "Course Introduction > Grading"
+        }
+      ],
+      "category": "adversarial",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s01.html#9",
+          "sections": [
+            "Course Introduction > Grading"
+          ],
+          "distance": 0.3259
+        },
+        {
+          "chunk_key": "dl-s01.html#10",
+          "sections": [
+            "Course Introduction > Quizzes and the late policy"
+          ],
+          "distance": 0.334
+        },
+        {
+          "chunk_key": "dl-s15.html#2",
+          "sections": [
+            "Guided Review: S01–S13 > How to use this deck: eight blocks, each ending in a self-check"
+          ],
+          "distance": 0.4122
+        },
+        {
+          "chunk_key": "dl-s23.html#1",
+          "sections": [
+            "Autoencoders & VAEs > Quiz 3 is at the end of class, and the proposal is due this Friday"
+          ],
+          "distance": 0.3652
+        },
+        {
+          "chunk_key": "dl-s23.html#94",
+          "sections": [
+            "Autoencoders & VAEs > Quiz 3 · the final 30 minutes (6:45–7:15 PM)"
+          ],
+          "distance": 0.3545
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The course has no final exam, so it is worth 0%; the four module quizzes replace it and each quiz is worth 15% of the grade in both CS 4715 and CS 5715.",
+        "citations": [
+          "dl-s01.html#9",
+          "dl-s01.html#10"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "partial",
+        "reason": "The model correctly rejects the false premise that a final exam exists, stating there is none and that the module quizzes replace it, matching the reference. However, it says each quiz is worth 15% whereas the reference says the four quizzes together are worth 15%, a factual discrepancy on a key number."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "partial",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-011",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What is a dead ReLU unit, and what usually causes it?",
+      "expected_answer": "A unit whose pre-activation is negative for every input, so its derivative is always 0 and it learns nothing. Usual causes are a too-large learning rate or bad initialization; it motivates leaky ReLU / GELU.",
+      "source_refs": [
+        {
+          "doc": "dl-s02.html",
+          "section": "From Linear Models to MLPs > ReLU's price: dead units"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s02.html#16",
+          "sections": [
+            "From Linear Models to MLPs > ReLU's price: dead units"
+          ],
+          "distance": 0.2677
+        },
+        {
+          "chunk_key": "dl-s15.html#10",
+          "sections": [
+            "Guided Review: S01–S13 > The sigmoid for a binary output, ReLU for hidden layers"
+          ],
+          "distance": 0.3188
+        },
+        {
+          "chunk_key": "dl-s10.html#48",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > ReLU alone still vanishes; ReLU with He initialization does not"
+          ],
+          "distance": 0.3616
+        },
+        {
+          "chunk_key": "dl-s10.html#49",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > ReLU alone still vanishes; ReLU with He initialization does not"
+          ],
+          "distance": 0.4
+        },
+        {
+          "chunk_key": "dl-s10.html#47",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > ReLU alone still vanishes; ReLU with He initialization does not"
+          ],
+          "distance": 0.3857
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "A dead ReLU is a unit whose pre-activation is negative for every input, so it learns nothing (it gets zero gradient). Its usual causes are a too-large learning rate and bad initialization.",
+        "citations": [
+          "dl-s02.html#16",
+          "dl-s15.html#10"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer gives the same key facts as the reference: pre-activation negative for all inputs, zero gradient so no learning, and causes of large learning rate and bad initialization; it omits the leaky ReLU/GELU motivation, which is extra context rather than a contradiction."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-012",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Why is mean squared error a poor loss for a sigmoid classifier?",
+      "expected_answer": "Its gradient with respect to the logit carries a factor p(1-p), which vanishes when the model is confidently wrong (about 1000x smaller than cross-entropy's at z = -8). Binary cross-entropy's gradient is p - y, so confident errors still get a strong push.",
+      "source_refs": [
+        {
+          "doc": "dl-s03.html",
+          "section": "Loss Functions and Gradient Descent > Why not MSE for classification? (reading 1.3)"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s23.html#12",
+          "sections": [
+            "Autoencoders & VAEs > Both models train for 2,000 Adam steps; predict where each one ends"
+          ],
+          "distance": 0.2996
+        },
+        {
+          "chunk_key": "dl-s03.html#8",
+          "sections": [
+            "Loss Functions and Gradient Descent > Regression: mean squared error"
+          ],
+          "distance": 0.2208
+        },
+        {
+          "chunk_key": "dl-s03.html#7",
+          "sections": [
+            "Loss Functions and Gradient Descent > Regression: mean squared error"
+          ],
+          "distance": 0.2709
+        },
+        {
+          "chunk_key": "dl-s03.html#11",
+          "sections": [
+            "Loss Functions and Gradient Descent > Why not MSE for classification? (reading 1.3)"
+          ],
+          "distance": 0.2124
+        },
+        {
+          "chunk_key": "dl-s03.html#12",
+          "sections": [
+            "Loss Functions and Gradient Descent > Why not MSE for classification? (reading 1.3)"
+          ],
+          "distance": 0.2603
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The documents show that with a sigmoid head, the MSE gradient dL/dz = 2(p−y)p(1−p) includes the factor p(1−p), which becomes tiny when the prediction is confidently wrong, so learning stalls; for example at z=−8 with y=1 the MSE gradient magnitude is 0.000670 versus 0.9997 for cross-entropy. Cross-entropy's gradient is simply p−y, so it stays large when the model is wrong.",
+        "citations": [
+          "dl-s03.html#11",
+          "dl-s03.html#12"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model gives the same key facts as the reference: MSE's gradient carries a p(1-p) factor that vanishes for confident errors, while cross-entropy's gradient is p-y and stays large; the extra numeric example is consistent with the reference's ~1000x claim."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.25,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-014",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How does AdamW apply weight decay?",
+      "expected_answer": "Directly to the parameters, outside the adaptive update: W_new = (1 - ηλ)W - η·M̂/(√V̂ + ε). The moment estimates use only the data gradient.",
+      "source_refs": [
+        {
+          "doc": "dl-s06.html",
+          "section": "Optimizers > AdamW applies decay directly to the parameter matrix"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s06.html#44",
+          "sections": [
+            "Optimizers > AdamW applies decay directly to the parameter matrix"
+          ],
+          "distance": 0.2087
+        },
+        {
+          "chunk_key": "dl-s15.html#49",
+          "sections": [
+            "Guided Review: S01–S13 > Adam steps about \\(\\eta\\) per coordinate; AdamW decays outside it"
+          ],
+          "distance": 0.2134
+        },
+        {
+          "chunk_key": "dl-s07.html#1",
+          "sections": [
+            "Regularization, Initialization, Normalization > Weight decay from S06; now measure its effect"
+          ],
+          "distance": 0.1956
+        },
+        {
+          "chunk_key": "dl-s06.html#45",
+          "sections": [
+            "Optimizers > Check decay against a zero-decay control"
+          ],
+          "distance": 0.2015
+        },
+        {
+          "chunk_key": "dl-s15.html#59",
+          "sections": [
+            "Guided Review: S01–S13 > Self-check: Adam's coupled weight decay against AdamW's"
+          ],
+          "distance": 0.2254
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "AdamW applies weight decay directly to the parameter matrix as a decoupled update: each step multiplies every entry of the old W by (1 - ηλ), outside the Adam moment estimates, which are computed from the data gradient alone. This differs from Adam's coupled L2 approach, which adds λW to the gradient before the moments.",
+        "citations": [
+          "dl-s06.html#44",
+          "dl-s15.html#49",
+          "dl-s07.html#1"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states the same key facts as the reference: weight decay is applied directly to the parameters, multiplying W by (1 - ηλ) outside the adaptive update, with moment estimates using only the data gradient. The added contrast with Adam's coupled L2 is correct extra detail."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-015",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What does nn.Dropout(p=0.5) do in training mode versus evaluation mode?",
+      "expected_answer": "In training mode it zeros about half the entries and scales the kept ones by 2, so the mean stays about 1. In evaluation mode it passes the input through unchanged.",
+      "source_refs": [
+        {
+          "doc": "dl-s07.html",
+          "section": "Regularization, Initialization, Normalization > Dropout code: the mode changes the operation"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s07.html#11",
+          "sections": [
+            "Regularization, Initialization, Normalization > Dropout: follow one activation through the random mask"
+          ],
+          "distance": 0.2129
+        },
+        {
+          "chunk_key": "dl-s07.html#10",
+          "sections": [
+            "Regularization, Initialization, Normalization > Dropout code: the mode changes the operation"
+          ],
+          "distance": 0.1949
+        },
+        {
+          "chunk_key": "dl-s07.html#37",
+          "sections": [
+            "Regularization, Initialization, Normalization > Train and eval select different behavior in some layers"
+          ],
+          "distance": 0.2125
+        },
+        {
+          "chunk_key": "dl-s07.html#7",
+          "sections": [
+            "Regularization, Initialization, Normalization > Dropout multiplies the activation matrix by a random mask"
+          ],
+          "distance": 0.2885
+        },
+        {
+          "chunk_key": "dl-s15.html#56",
+          "sections": [
+            "Guided Review: S01–S13 > Normalization chooses an axis; regularization limits overfitting"
+          ],
+          "distance": 0.2988
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "In training mode, nn.Dropout(p=0.5) multiplies the input by a fresh random mask and rescales kept entries by 1/(1-p)=2, so each activation's expected output equals its input while individual values are either 0 or doubled. In evaluation mode (after drop.eval()), it returns the input unchanged as the identity.",
+        "citations": [
+          "dl-s07.html#7",
+          "dl-s07.html#10",
+          "dl-s07.html#11",
+          "dl-s07.html#37"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states that in training mode dropout zeros entries randomly and rescales kept entries by 2 (1/(1-p)), preserving expected value, and in evaluation mode it passes input unchanged, matching the reference. Extra detail about the mask and expected value is consistent with the reference's 'mean stays about 1'."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-017",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What does a 1×1 convolution do?",
+      "expected_answer": "It mixes channels at each pixel and keeps the spatial grid unchanged, like nn.Linear applied to every pixel's channel vector. For example, 64 to 16 channels costs 64·16 + 16 = 1040 parameters.",
+      "source_refs": [
+        {
+          "doc": "dl-s09.html",
+          "section": "CNNs I: Convolution > A \\(1\\times1\\) convolution mixes channels at each pixel and keeps the grid"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s09.html#9",
+          "sections": [
+            "CNNs I: Convolution > All local responses form a feature map"
+          ],
+          "distance": 0.242
+        },
+        {
+          "chunk_key": "dl-s09.html#42",
+          "sections": [
+            "CNNs I: Convolution > A kernel spans all input channels; each kernel gives one output channel"
+          ],
+          "distance": 0.2609
+        },
+        {
+          "chunk_key": "dl-s09.html#24",
+          "sections": [
+            "CNNs I: Convolution > The loop reproduces the feature map computed by hand"
+          ],
+          "distance": 0.2489
+        },
+        {
+          "chunk_key": "dl-s09.html#4",
+          "sections": [
+            "CNNs I: Convolution > The same pattern should use the same detector wherever it appears",
+            "CNNs I: Convolution > Convolution builds locality and weight sharing into the model"
+          ],
+          "distance": 0.2288
+        },
+        {
+          "chunk_key": "dl-s09.html#20",
+          "sections": [
+            "CNNs I: Convolution > One input produces three different spatial sizes"
+          ],
+          "distance": 0.2425
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true,
+        "hit": false,
+        "recall": 0.0,
+        "rr": 0.0,
+        "verdict": "incorrect"
+      }
+    },
+    {
+      "id": "dl-018",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What does a residual block compute?",
+      "expected_answer": "Y = F(X) + X (followed by a ReLU): the branch F learns only the correction Y - X, and F(X) must have the same shape as X.",
+      "source_refs": [
+        {
+          "doc": "dl-s10.html",
+          "section": "CNNs II: ResNet and Modern Architecture Design > The residual block: learn a correction and add the input back"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s10.html#71",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > Deriving: the block's backward pass contains an identity term"
+          ],
+          "distance": 0.1712
+        },
+        {
+          "chunk_key": "dl-s10.html#68",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > The residual block: learn a correction and add the input back"
+          ],
+          "distance": 0.1926
+        },
+        {
+          "chunk_key": "dl-s15.html#85",
+          "sections": [
+            "Guided Review: S01–S13 > ResNet: a residual block's Jacobian is \\(J_F+I\\)"
+          ],
+          "distance": 0.1995
+        },
+        {
+          "chunk_key": "dl-s10.html#67",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > The residual block: learn a correction and add the input back"
+          ],
+          "distance": 0.2448
+        },
+        {
+          "chunk_key": "dl-s15.html#86",
+          "sections": [
+            "Guided Review: S01–S13 > ResNet: a residual block's Jacobian is \\(J_F+I\\)"
+          ],
+          "distance": 0.2091
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "A residual block computes Y = F(X) + X, where F(X) is the learned branch (e.g., conv-ReLU-conv) and X is the input added back via the identity skip, followed by a ReLU. Because the branch only needs to learn the correction F(X) = Y - X, a near-zero branch makes the block pass X through nearly unchanged.",
+        "citations": [
+          "dl-s10.html#67",
+          "dl-s10.html#68"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states Y = F(X) + X followed by ReLU, and that the branch learns the correction Y - X, matching the reference; it omits the explicit same-shape requirement for F(X) but adds consistent detail about identity skip and near-zero branch behavior, contradicting nothing."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-020",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Why can't BERT be trained with next-token prediction?",
+      "expected_answer": "BERT has no causal mask, so each position can see the next token it would have to predict.",
+      "source_refs": [
+        {
+          "doc": "dl-s17.html",
+          "section": "Transformer II > BERT cannot train on next-token prediction because it sees the answer"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s17.html#55",
+          "sections": [
+            "Transformer II > BERT cannot train on next-token prediction because it sees the answer"
+          ],
+          "distance": 0.1453
+        },
+        {
+          "chunk_key": "dl-s17.html#54",
+          "sections": [
+            "Transformer II > BERT cannot train on next-token prediction because it sees the answer"
+          ],
+          "distance": 0.1947
+        },
+        {
+          "chunk_key": "dl-s17.html#56",
+          "sections": [
+            "Transformer II > Next-token prediction is the objective that scaled"
+          ],
+          "distance": 0.1989
+        },
+        {
+          "chunk_key": "dl-s17.html#91",
+          "sections": [
+            "Transformer II > Today's question gets four answers, from one block to learned tokens"
+          ],
+          "distance": 0.2111
+        },
+        {
+          "chunk_key": "dl-s17.html#52",
+          "sections": [
+            "Transformer II > Three families differ in stack, attention and training objective"
+          ],
+          "distance": 0.2983
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "BERT cannot be trained on next-token prediction because it uses bidirectional attention without a causal mask, so when predicting token t+1 at position t, the target token is one of the keys that position can see, meaning the model sees the answer. BERT's masking instead hides 15% of input tokens and reconstructs them from both sides, and next-token training requires causal attention so that no position sees its target.",
+        "citations": [
+          "dl-s17.html#54",
+          "dl-s17.html#55",
+          "dl-s17.html#52"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model gives the key fact from the reference: BERT lacks a causal mask so each position can see the token it must predict, and adds accurate supporting detail about masked language modeling without contradicting anything."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-021",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How does byte-pair encoding build its vocabulary?",
+      "expected_answer": "Words start as characters plus an end-of-word marker; training repeatedly merges the most frequent adjacent pair (weighted by word counts) and records the ordered list of merges. Tokenizing new text replays those merges in order.",
+      "source_refs": [
+        {
+          "doc": "dl-s17.html",
+          "section": "Transformer II > Byte-pair encoding repeatedly merges the most frequent adjacent pair"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s17.html#5",
+          "sections": [
+            "Transformer II > Today builds the block and its mask, then turns to stacks and tokens"
+          ],
+          "distance": 0.2761
+        },
+        {
+          "chunk_key": "dl-s17.html#63",
+          "sections": [
+            "Transformer II > Byte-pair encoding repeatedly merges the most frequent adjacent pair"
+          ],
+          "distance": 0.2769
+        },
+        {
+          "chunk_key": "dl-s17.html#62",
+          "sections": [
+            "Transformer II > Byte-pair encoding repeatedly merges the most frequent adjacent pair"
+          ],
+          "distance": 0.2167
+        },
+        {
+          "chunk_key": "dl-s17.html#70",
+          "sections": [
+            "Transformer II > Every word is split the same way, so an unseen word still gets subwords"
+          ],
+          "distance": 0.3258
+        },
+        {
+          "chunk_key": "dl-s17.html#61",
+          "sections": [
+            "Transformer II > Word ids fail on new words, and character ids make sequences long"
+          ],
+          "distance": 0.3221
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "BPE starts with words written as characters plus an end-of-word marker </w>, counts adjacent symbol pairs weighted by word count, and repeatedly merges the most frequent pair everywhere, recording each merge in an ordered list; each merge adds one symbol to the vocabulary, and tokenizing new text replays the merges in their order.",
+        "citations": [
+          "dl-s17.html#62",
+          "dl-s17.html#63"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer captures all key facts: characters plus end-of-word marker, repeatedly merging the most frequent adjacent pair weighted by word counts, recording ordered merges, and replaying merges when tokenizing new text. It adds a correct extra detail (the </w> marker and vocabulary growth per merge)."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-022",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What does DPO replace in the RLHF pipeline?",
+      "expected_answer": "Steps 2 and 3, the reward model and the RL loop with a KL penalty. DPO trains the policy directly on the same preference pairs with one classification-style loss, using the SFT model as the reference.",
+      "source_refs": [
+        {
+          "doc": "dl-s21.html",
+          "section": "Alignment > DPO replaces steps 2 and 3"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s21.html#15",
+          "sections": [
+            "Alignment > DPO replaces steps 2 and 3"
+          ],
+          "distance": 0.2441
+        },
+        {
+          "chunk_key": "dl-s21.html#2",
+          "sections": [
+            "Alignment > Today follows the pipeline's steps, then asks what they do not buy"
+          ],
+          "distance": 0.3088
+        },
+        {
+          "chunk_key": "dl-s21.html#0",
+          "sections": [
+            "",
+            "Alignment"
+          ],
+          "distance": 0.3307
+        },
+        {
+          "chunk_key": "dl-s21.html#26",
+          "sections": [
+            "Alignment > Substituting into Bradley–Terry cancels \\(\\log Z\\), leaving a loss on the policy"
+          ],
+          "distance": 0.2723
+        },
+        {
+          "chunk_key": "dl-s21.html#16",
+          "sections": [
+            "Alignment > DPO starts from the optimum of slide 8's objective"
+          ],
+          "distance": 0.2878
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "DPO replaces steps 2 and 3 of the RLHF pipeline (the reward model and the RL loop with a KL penalty), rather than being a step after them. It trains the policy directly on the same preference pairs with no reward model and no RL.",
+        "citations": [
+          "dl-s21.html#15",
+          "dl-s21.html#2"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states DPO replaces steps 2 and 3 (reward model and RL loop with KL penalty) and trains directly on preference pairs without a reward model or RL, matching the reference; it omits the SFT reference detail but contradicts nothing."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-024",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What is posterior collapse in a VAE?",
+      "expected_answer": "The approximate posterior q(z|x) equals the prior for every input: the decoder stops using the code and the KL term goes to about 0.",
+      "source_refs": [
+        {
+          "doc": "dl-s23.html",
+          "section": "Autoencoders & VAEs > In posterior collapse, the decoder stops using the code"
+        }
+      ],
+      "category": "single_fact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s23.html#89",
+          "sections": [
+            "Autoencoders & VAEs > Five mistakes in your own VAE, each with its cause and its fix"
+          ],
+          "distance": 0.3314
+        },
+        {
+          "chunk_key": "dl-s23.html#83",
+          "sections": [
+            "Autoencoders & VAEs > In posterior collapse, the decoder stops using the code"
+          ],
+          "distance": 0.2903
+        },
+        {
+          "chunk_key": "dl-s23.html#84",
+          "sections": [
+            "Autoencoders & VAEs > In posterior collapse, the decoder stops using the code"
+          ],
+          "distance": 0.319
+        },
+        {
+          "chunk_key": "dl-s23.html#86",
+          "sections": [
+            "Autoencoders & VAEs > Self-check on a collapsed run and a near-plain autoencoder"
+          ],
+          "distance": 0.36
+        },
+        {
+          "chunk_key": "dl-s23.html#22",
+          "sections": [
+            "Autoencoders & VAEs > The VAE encodes a distribution per input"
+          ],
+          "distance": 0.2969
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "Posterior collapse is when the approximate posterior q(z|x) becomes the prior for every input, so the decoder stops using the code z; the KL term goes near 0 and samples cluster near the dataset mean. It is typically caused by beta being too high, or by a strong decoder that ignores z, and can be fixed by lowering beta or annealing beta from 0.",
+        "citations": [
+          "dl-s23.html#83",
+          "dl-s23.html#84",
+          "dl-s23.html#89"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states the key facts: q(z|x) equals the prior for every input, the decoder ignores the code, and KL goes to about 0. The extra claims about causes and fixes are additional detail not contradicting the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-025",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How many parameters does LeNet-5 have when built in PyTorch?",
+      "expected_answer": "61,706.",
+      "source_refs": [
+        {
+          "doc": "dl-s10.html",
+          "section": "CNNs II: ResNet and Modern Architecture Design > LeNet-5 in today's PyTorch: shapes and 61,706 parameters"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s10.html#8",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > LeNet-5 in today's PyTorch: shapes and 61,706 parameters"
+          ],
+          "distance": 0.2282
+        },
+        {
+          "chunk_key": "dl-s10.html#7",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > LeNet-5 in today's PyTorch: shapes and 61,706 parameters"
+          ],
+          "distance": 0.1648
+        },
+        {
+          "chunk_key": "dl-s10.html#6",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > LeNet-5 in today's PyTorch: shapes and 61,706 parameters"
+          ],
+          "distance": 0.1433
+        },
+        {
+          "chunk_key": "dl-s08.html#15",
+          "sections": [
+            "PyTorch in Practice > named_parameters prints the predicted inventory"
+          ],
+          "distance": 0.2606
+        },
+        {
+          "chunk_key": "dl-s08.html#23",
+          "sections": [
+            "PyTorch in Practice > The four-line core changes parameters once per minibatch"
+          ],
+          "distance": 0.2499
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The PyTorch LeNet-5 built in the documents has 61,706 parameters, as printed by sum(p.numel() for p in lenet.parameters()). The 1998 original network had about 60,000 because its second convolution was only partly connected.",
+        "citations": [
+          "dl-s10.html#8",
+          "dl-s10.html#7"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model's main answer of 61,706 parameters matches the reference exactly; the extra note about the 1998 original is additional context that does not contradict the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-026",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How many attention heads did the original 2017 Transformer base model use?",
+      "expected_answer": "8 heads (with d_model = 512, d_ff = 2048, about 65M parameters).",
+      "source_refs": [
+        {
+          "doc": "dl-s16.html",
+          "section": "Transformer I > The original model had about 65M parameters and set a new state of the art in translation"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s16.html#9",
+          "sections": [
+            "Transformer I > The original model had about 65M parameters and set a new state of the art in translation"
+          ],
+          "distance": 0.2491
+        },
+        {
+          "chunk_key": "dl-s16.html#6",
+          "sections": [
+            "Transformer I > In 2017 the Transformer deleted the recurrence, kept the attention and added structure"
+          ],
+          "distance": 0.3062
+        },
+        {
+          "chunk_key": "dl-s16.html#13",
+          "sections": [
+            "Transformer I > Multi-head attention runs \\(h\\) smaller heads and concatenates them"
+          ],
+          "distance": 0.2515
+        },
+        {
+          "chunk_key": "dl-s16.html#4",
+          "sections": [
+            "Transformer I > Today changes the layer first, then its input, then what surrounds it"
+          ],
+          "distance": 0.2984
+        },
+        {
+          "chunk_key": "dl-s16.html#14",
+          "sections": [
+            "Transformer I > Multi-head attention runs \\(h\\) smaller heads and concatenates them"
+          ],
+          "distance": 0.2763
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "incorrect"
+      }
+    },
+    {
+      "id": "dl-028",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How much memory does full fine-tuning of a 7B-parameter model need, before activations?",
+      "expected_answer": "About 104 GiB (16 bytes per trained parameter).",
+      "source_refs": [
+        {
+          "doc": "dl-s19.html",
+          "section": "Fine-Tuning & LoRA > A 7B model needs 104 GiB to fine-tune in full, 13 GiB with a frozen base"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s19.html#12",
+          "sections": [
+            "Fine-Tuning & LoRA > A 7B model needs 104 GiB to fine-tune in full, 13 GiB with a frozen base"
+          ],
+          "distance": 0.2161
+        },
+        {
+          "chunk_key": "dl-s19.html#14",
+          "sections": [
+            "Fine-Tuning & LoRA > A 7B model needs 104 GiB to fine-tune in full, 13 GiB with a frozen base"
+          ],
+          "distance": 0.2534
+        },
+        {
+          "chunk_key": "dl-s19.html#92",
+          "sections": [
+            "Fine-Tuning & LoRA > Today's answer covers fine-tuning's cost and what LoRA buys and does not"
+          ],
+          "distance": 0.1741
+        },
+        {
+          "chunk_key": "dl-s20.html#3",
+          "sections": [
+            "Decoding & Inference > S19 adapted a pretrained model through a small update"
+          ],
+          "distance": 0.216
+        },
+        {
+          "chunk_key": "dl-s19.html#13",
+          "sections": [
+            "Fine-Tuning & LoRA > A 7B model needs 104 GiB to fine-tune in full, 13 GiB with a frozen base"
+          ],
+          "distance": 0.2129
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "Full fine-tuning of a 7B-parameter model needs about 16 bytes per trained parameter before activations, which is 104.3 GiB (two 80 GB cards).",
+        "citations": [
+          "dl-s19.html#12",
+          "dl-s19.html#92"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model gives 16 bytes per parameter and 104.3 GiB, matching the reference's 104 GiB and 16 bytes per parameter; the added note about two 80 GB cards is extra detail that doesn't contradict the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-029",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What is the maximum project team size for CS 5715 students?",
+      "expected_answer": "2 (CS 4715 teams may have 1 to 3 members).",
+      "source_refs": [
+        {
+          "doc": "dl-s11.html",
+          "section": "Transfer Learning and Data Augmentation > 📋 Admin: the project guide is released today"
+        },
+        {
+          "doc": "dl-s01.html",
+          "section": "Course Introduction > Homework and the compute promise"
+        }
+      ],
+      "category": "exact",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s17.html#1",
+          "sections": [
+            "Transformer II > The proposal, HW2 and HW3 come next"
+          ],
+          "distance": 0.3921
+        },
+        {
+          "chunk_key": "dl-s11.html#1",
+          "sections": [
+            "Transfer Learning and Data Augmentation > 📋 Admin: the project guide is released today"
+          ],
+          "distance": 0.3362
+        },
+        {
+          "chunk_key": "dl-s01.html#12",
+          "sections": [
+            "Course Introduction > Homework and the compute promise"
+          ],
+          "distance": 0.4008
+        },
+        {
+          "chunk_key": "dl-s01.html#9",
+          "sections": [
+            "Course Introduction > Grading"
+          ],
+          "distance": 0.3261
+        },
+        {
+          "chunk_key": "dl-s10.html#95",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > What the history teaches"
+          ],
+          "distance": 0.4127
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "For CS 5715 students, the maximum project team size is 2 members (teams of 1–3 are allowed for the course generally, but CS 5715 is capped at 2).",
+        "citations": [
+          "dl-s17.html#1",
+          "dl-s11.html#1",
+          "dl-s01.html#12"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answers the maximum team size for CS 5715 as 2, matching the reference answer's key fact, and its parenthetical about 1–3 members aligns with the reference's note on the team size range."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-030",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "In which sessions are the four module quizzes held?",
+      "expected_answer": "S09 (Quiz 1), S13 (Quiz 2), S23 (Quiz 3) and S27 (Quiz 4).",
+      "source_refs": [
+        {
+          "doc": "dl-s09.html",
+          "section": "CNNs I: Convolution > Quiz 1 · the final 30 minutes (6:45–7:15 PM)"
+        },
+        {
+          "doc": "dl-s13.html",
+          "section": "Sequence Modeling: RNNs and LSTMs > Quiz 2 · the final 30 minutes (6:45–7:15 PM)"
+        },
+        {
+          "doc": "dl-s23.html",
+          "section": "Autoencoders & VAEs > Quiz 3 is at the end of class, and the proposal is due this Friday"
+        },
+        {
+          "doc": "dl-s02.html",
+          "section": "From Linear Models to MLPs > Missing a quiz: the make-up rule"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s01.html#10",
+          "sections": [
+            "Course Introduction > Quizzes and the late policy"
+          ],
+          "distance": 0.3758
+        },
+        {
+          "chunk_key": "dl-s02.html#0",
+          "sections": [
+            "",
+            "From Linear Models to MLPs",
+            "From Linear Models to MLPs > Missing a quiz: the make-up rule"
+          ],
+          "distance": 0.4455
+        },
+        {
+          "chunk_key": "dl-s14.html#108",
+          "sections": [
+            "Attention > For next time"
+          ],
+          "distance": 0.4477
+        },
+        {
+          "chunk_key": "dl-s12.html#1",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > 📋 Admin: HW2 out today; Quiz 2 next session"
+          ],
+          "distance": 0.4261
+        },
+        {
+          "chunk_key": "dl-s12.html#82",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > For next time"
+          ],
+          "distance": 0.4609
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The documents give three of the four quiz sessions: Quiz 1 is at S09 (covering Module 1), Quiz 2 is at S13 (covering S09–S12), and Quiz 3 is at S23 (covering Module 3). The session for Quiz 4 is not stated in the documents. Each quiz is held in the final 30 minutes of a Wednesday class.",
+        "citations": [
+          "dl-s01.html#10",
+          "dl-s02.html#0",
+          "dl-s12.html#1",
+          "dl-s14.html#108"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "partial",
+        "reason": "The model gives S09, S13, and S23 correctly but says Quiz 4's session is not stated, whereas the reference answer identifies it as S27, so a key fact is missing."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 0.25,
+        "rr": 0.5,
+        "verdict": "partial",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-032",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What does HW2 cover, and what is released in the session HW2 is due?",
+      "expected_answer": "HW2 covers CNNs and transfer learning (convolution and max pooling by hand in NumPy, then a frozen-trunk transfer experiment). It is due at S18, the same session HW3 (a Transformer from scratch) goes out.",
+      "source_refs": [
+        {
+          "doc": "dl-s12.html",
+          "section": "Training in Practice: Debugging, Diagnosis, Experiment Tracking > 📋 Admin: HW2 out today; Quiz 2 next session"
+        },
+        {
+          "doc": "dl-s18.html",
+          "section": "LLM Pretraining > HW2 is due today, and HW3 goes out today"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s12.html#1",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > 📋 Admin: HW2 out today; Quiz 2 next session"
+          ],
+          "distance": 0.294
+        },
+        {
+          "chunk_key": "dl-s12.html#82",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > For next time"
+          ],
+          "distance": 0.3589
+        },
+        {
+          "chunk_key": "dl-s14.html#108",
+          "sections": [
+            "Attention > For next time"
+          ],
+          "distance": 0.3627
+        },
+        {
+          "chunk_key": "dl-s18.html#1",
+          "sections": [
+            "LLM Pretraining > HW2 is due today, and HW3 goes out today"
+          ],
+          "distance": 0.3294
+        },
+        {
+          "chunk_key": "dl-s08.html#0",
+          "sections": [
+            "",
+            "PyTorch in Practice",
+            "PyTorch in Practice > Admin: HW1 is due today"
+          ],
+          "distance": 0.3701
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "HW2 covers CNNs and transfer learning: convolution and max pooling by hand in NumPy, then a frozen-trunk transfer experiment. In the session HW2 is due (S18), HW3 (Transformer from scratch) is released, and it is due at S22.",
+        "citations": [
+          "dl-s12.html#1",
+          "dl-s18.html#1"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model correctly identifies HW2's content (CNNs, transfer learning, NumPy convolution/max pooling, frozen-trunk experiment) and that HW2 is due at S18 when HW3 is released, matching the reference. The extra claim that HW3 is due at S22 is additional detail not contradicted by the reference, so it does not count against it."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-033",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "The Transformer's residual connections come from which earlier architecture, and do they guarantee a large gradient?",
+      "expected_answer": "From ResNet (He et al., 2016). No: the identity term gives the gradient a direct route, but the factors (I + J) still multiply across blocks, so the gradient can still shrink, explode or cancel.",
+      "source_refs": [
+        {
+          "doc": "dl-s16.html",
+          "section": "Transformer I > A residual connection adds the input to the sublayer's output, as in S10"
+        },
+        {
+          "doc": "dl-s10.html",
+          "section": "CNNs II: ResNet and Modern Architecture Design > The identity term helps; it does not guarantee a large gradient"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s16.html#79",
+          "sections": [
+            "Transformer I > A residual connection adds the input to the sublayer's output, as in S10"
+          ],
+          "distance": 0.2732
+        },
+        {
+          "chunk_key": "dl-s10.html#86",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > The identity term helps; it does not guarantee a large gradient"
+          ],
+          "distance": 0.3178
+        },
+        {
+          "chunk_key": "dl-s16.html#80",
+          "sections": [
+            "Transformer I > A residual connection adds the input to the sublayer's output, as in S10"
+          ],
+          "distance": 0.2226
+        },
+        {
+          "chunk_key": "dl-s10.html#95",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > What the history teaches"
+          ],
+          "distance": 0.315
+        },
+        {
+          "chunk_key": "dl-s17.html#3",
+          "sections": [
+            "Transformer II > S16 named five pieces but did not yet assemble them into one block"
+          ],
+          "distance": 0.2868
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The Transformer's residual connections come from ResNets (He et al., 2016, introduced for vision, S10), and they do not guarantee a large gradient: the identity term helps, but the factors (I+J) still multiply across blocks and a branch can cancel the identity.",
+        "citations": [
+          "dl-s16.html#79",
+          "dl-s10.html#86",
+          "dl-s10.html#95"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer names ResNet (He et al., 2016) as the source of residual connections and states they do not guarantee a large gradient because (I+J) factors multiply across blocks and can cancel, matching the reference's key facts."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-034",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Over what does the Transformer's LayerNorm compute its statistics, and how does that differ from BatchNorm1d?",
+      "expected_answer": "LayerNorm uses each token's own d_model features (one mean and variance per token, no batch statistics). BatchNorm1d computes them per feature over the rows of the batch.",
+      "source_refs": [
+        {
+          "doc": "dl-s16.html",
+          "section": "Transformer I > Layer normalization standardizes each token's own feature vector"
+        },
+        {
+          "doc": "dl-s07.html",
+          "section": "Regularization, Initialization, Normalization > BatchNorm1d: reduce over rows, then broadcast over rows"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s07.html#37",
+          "sections": [
+            "Regularization, Initialization, Normalization > Train and eval select different behavior in some layers"
+          ],
+          "distance": 0.252
+        },
+        {
+          "chunk_key": "dl-s16.html#82",
+          "sections": [
+            "Transformer I > Layer normalization standardizes each token's own feature vector"
+          ],
+          "distance": 0.2133
+        },
+        {
+          "chunk_key": "dl-s10.html#51",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > BatchNorm keeps the signal at scale, even under a bad initialization"
+          ],
+          "distance": 0.2797
+        },
+        {
+          "chunk_key": "dl-s07.html#36",
+          "sections": [
+            "Regularization, Initialization, Normalization > The same sample can change when its batchmates change"
+          ],
+          "distance": 0.2083
+        },
+        {
+          "chunk_key": "dl-s16.html#81",
+          "sections": [
+            "Transformer I > Layer normalization standardizes each token's own feature vector"
+          ],
+          "distance": 0.2275
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The Transformer's LayerNorm computes its mean and variance over each token's own d_model feature vector, so it uses no batch statistics and gives the same result regardless of batch size or sequence length. BatchNorm1d instead computes statistics per feature across the batch (over dim=0, the rows), so its output for one sample depends on its batchmates.",
+        "citations": [
+          "dl-s16.html#82",
+          "dl-s16.html#81",
+          "dl-s10.html#51",
+          "dl-s07.html#36"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer states LayerNorm computes statistics over each token's d_model features with no batch statistics, and BatchNorm1d computes per feature across batch rows, matching the reference; the extra claims about batch size and sequence length independence are correct elaborations."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 0.5,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-035",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What is the gradient of the softmax cross-entropy loss with respect to the logits, and how does it compare with the binary sigmoid case?",
+      "expected_answer": "(P - Y)/N for a batch of N (predicted probabilities minus one-hot targets, averaged). The binary sigmoid + cross-entropy case gives the same form, p - y.",
+      "source_refs": [
+        {
+          "doc": "dl-s05.html",
+          "section": "Backpropagation II 反向传播 II > Backward starts at the loss: the gradient of the logits 从损失开始反向：对类别得分求导"
+        },
+        {
+          "doc": "dl-s03.html",
+          "section": "Loss Functions and Gradient Descent > Why not MSE for classification? (reading 1.3)"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s15.html#16",
+          "sections": [
+            "Guided Review: S01–S13 > Block 2 · S03: cross-entropy's push survives a confident error"
+          ],
+          "distance": 0.1924
+        },
+        {
+          "chunk_key": "dl-s03.html#23",
+          "sections": [
+            "Loss Functions and Gradient Descent > Cross-entropy, properly: one formula"
+          ],
+          "distance": 0.157
+        },
+        {
+          "chunk_key": "dl-s12.html#31",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > Why the buggy loss cannot fall below 0.7437"
+          ],
+          "distance": 0.215
+        },
+        {
+          "chunk_key": "dl-s03.html#30",
+          "sections": [
+            "Loss Functions and Gradient Descent > The overflow you will hit (reading 1.3)"
+          ],
+          "distance": 0.159
+        },
+        {
+          "chunk_key": "dl-s15.html#21",
+          "sections": [
+            "Guided Review: S01–S13 > Worked: subtract the largest logit before exponentiating"
+          ],
+          "distance": 0.2226
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "incorrect"
+      }
+    },
+    {
+      "id": "dl-036",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What loss does InstructGPT's supervised fine-tuning step use, and how does it differ from pretraining?",
+      "expected_answer": "The same next-token loss as pretraining (average -log p of each next token), but only the response tokens are targets; the prompt is not in the loss.",
+      "source_refs": [
+        {
+          "doc": "dl-s21.html",
+          "section": "Alignment > Step 1, SFT, applies the next-token loss to the response tokens"
+        },
+        {
+          "doc": "dl-s18.html",
+          "section": "LLM Pretraining > The objective is the average \\(-\\log p\\) of every next token"
+        }
+      ],
+      "category": "multi_hop",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s22.html#2",
+          "sections": [
+            "Vision Transformers & Multimodal Models > S21 aligned a model by changing its distribution itself"
+          ],
+          "distance": 0.2554
+        },
+        {
+          "chunk_key": "dl-s21.html#4",
+          "sections": [
+            "Alignment > Step 1, SFT, applies the next-token loss to the response tokens"
+          ],
+          "distance": 0.231
+        },
+        {
+          "chunk_key": "dl-s18.html#14",
+          "sections": [
+            "LLM Pretraining > Self-supervised means the text supplies every label; the step is S08's"
+          ],
+          "distance": 0.2678
+        },
+        {
+          "chunk_key": "dl-s19.html#39",
+          "sections": [
+            "Fine-Tuning & LoRA > Design details 2 and 3 are the scale \\(\\alpha/r\\) and where the updates go"
+          ],
+          "distance": 0.2666
+        },
+        {
+          "chunk_key": "dl-s19.html#3",
+          "sections": [
+            "Fine-Tuning & LoRA > S18 pretrained a model on next-token prediction"
+          ],
+          "distance": 0.273
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "InstructGPT's supervised fine-tuning (SFT) step uses S18's next-token loss, but restricted to the response tokens of human-written demonstrations: L_SFT = -sum over response tokens t of log π_θ(y_t | x, y_<t), where x is the prompt and y the response. It differs from pretraining in that the loss is applied only to the response tokens of prompt-response demonstrations rather than to all text, and the training data is human-written demonstrations rather than the broad self-supervised text corpus.",
+        "citations": [
+          "dl-s21.html#4",
+          "dl-s22.html#2"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model correctly identifies the same next-token (negative log-likelihood) loss as pretraining, restricted to response tokens with the prompt excluded from the loss, which matches the reference. It adds the note about human-written demonstrations as data, which is extra correct detail and does not contradict the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 0.5,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-038",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How do state-space models such as Mamba compare with Transformers?",
+      "expected_answer": null,
+      "source_refs": [],
+      "category": "unanswerable",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s16.html#71",
+          "sections": [
+            "Transformer I > RoPE rotates \\(\\mathbf{q}\\) and \\(\\mathbf{k}\\) by position, so the score depends on \\(n-m\\)"
+          ],
+          "distance": 0.392
+        },
+        {
+          "chunk_key": "dl-s16.html#68",
+          "sections": [
+            "Transformer I > RoPE rotates \\(\\mathbf{q}\\) and \\(\\mathbf{k}\\) by position, so the score depends on \\(n-m\\)"
+          ],
+          "distance": 0.3862
+        },
+        {
+          "chunk_key": "dl-s16.html#69",
+          "sections": [
+            "Transformer I > RoPE rotates \\(\\mathbf{q}\\) and \\(\\mathbf{k}\\) by position, so the score depends on \\(n-m\\)"
+          ],
+          "distance": 0.3854
+        },
+        {
+          "chunk_key": "dl-s16.html#70",
+          "sections": [
+            "Transformer I > RoPE rotates \\(\\mathbf{q}\\) and \\(\\mathbf{k}\\) by position, so the score depends on \\(n-m\\)"
+          ],
+          "distance": 0.3726
+        },
+        {
+          "chunk_key": "dl-s16.html#55",
+          "sections": [
+            "Transformer I > Position 3's encoding by hand, with \\(d_{\\text{model}}=32\\)"
+          ],
+          "distance": 0.3879
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true
+      }
+    },
+    {
+      "id": "dl-039",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Should a language model tie its input embedding and output projection weights?",
+      "expected_answer": null,
+      "source_refs": [],
+      "category": "unanswerable",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s20.html#0",
+          "sections": [
+            "",
+            "Decoding & Inference"
+          ],
+          "distance": 0.266
+        },
+        {
+          "chunk_key": "dl-s17.html#24",
+          "sections": [
+            "Transformer II > A language model is a classifier over the vocabulary at every position"
+          ],
+          "distance": 0.2401
+        },
+        {
+          "chunk_key": "dl-s13.html#8",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Four ways to wire an unrolled RNN: where inputs enter, where the loss sits"
+          ],
+          "distance": 0.2411
+        },
+        {
+          "chunk_key": "dl-s17.html#42",
+          "sections": [
+            "Transformer II > A leak shows in training as a loss below what the data allows"
+          ],
+          "distance": 0.2573
+        },
+        {
+          "chunk_key": "dl-s17.html#48",
+          "sections": [
+            "Transformer II > The full model runs \\(N\\) blocks between an embedding and a head"
+          ],
+          "distance": 0.2436
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true
+      }
+    },
+    {
+      "id": "dl-040",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How do U-Net skip connections differ from ResNet's?",
+      "expected_answer": null,
+      "source_refs": [],
+      "category": "unanswerable",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s11.html#31",
+          "sections": [
+            "Transfer Learning and Data Augmentation > Self-check: fix the skip at a downsampling block"
+          ],
+          "distance": 0.3123
+        },
+        {
+          "chunk_key": "dl-s11.html#16",
+          "sections": [
+            "Transfer Learning and Data Augmentation > At a downsampling block, \\(F(X)\\) and \\(X\\) have different shapes"
+          ],
+          "distance": 0.3536
+        },
+        {
+          "chunk_key": "dl-s10.html#89",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > A controlled experiment: the same conv blocks, with and without the skip"
+          ],
+          "distance": 0.3028
+        },
+        {
+          "chunk_key": "dl-s10.html#94",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > The skip keeps the gradient from vanishing; it does not bound its size"
+          ],
+          "distance": 0.3218
+        },
+        {
+          "chunk_key": "dl-s10.html#88",
+          "sections": [
+            "CNNs II: ResNet and Modern Architecture Design > A controlled experiment: the same conv blocks, with and without the skip"
+          ],
+          "distance": 0.2973
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true
+      }
+    },
+    {
+      "id": "dl-041",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "What is the exact formula for the GELU activation?",
+      "expected_answer": null,
+      "source_refs": [],
+      "category": "unanswerable",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s02.html#16",
+          "sections": [
+            "From Linear Models to MLPs > ReLU's price: dead units"
+          ],
+          "distance": 0.3421
+        },
+        {
+          "chunk_key": "dl-s15.html#53",
+          "sections": [
+            "Guided Review: S01–S13 > Initialization: each layer should multiply \\(\\mathbb{E}[x^2]\\) by about 1"
+          ],
+          "distance": 0.3319
+        },
+        {
+          "chunk_key": "dl-s07.html#13",
+          "sections": [
+            "Regularization, Initialization, Normalization > Initialize the weight matrix for its input width and activation"
+          ],
+          "distance": 0.3649
+        },
+        {
+          "chunk_key": "dl-s15.html#52",
+          "sections": [
+            "Guided Review: S01–S13 > Initialization: each layer should multiply \\(\\mathbb{E}[x^2]\\) by about 1"
+          ],
+          "distance": 0.3434
+        },
+        {
+          "chunk_key": "dl-s02.html#15",
+          "sections": [
+            "From Linear Models to MLPs > Why ReLU wins: look at the derivatives (reading 1.2)"
+          ],
+          "distance": 0.3632
+        }
+      ],
+      "answer": {
+        "found": false,
+        "answer": "Not found in the provided documents.",
+        "citations": []
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": null,
+        "reason": null
+      },
+      "metrics": {
+        "abstained": true
+      }
+    },
+    {
+      "id": "dl-045",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Why does dividing attention scores by √d_k change which key gets the highest weight?",
+      "expected_answer": "It doesn't. Dividing every score by the same positive number never changes their order; it only changes how peaked the softmax is, keeping score variance at 1 so gradients flow.",
+      "source_refs": [
+        {
+          "doc": "dl-s14.html",
+          "section": "Attention > The fix: divide by \\(\\sqrt{d_k}\\), as Vaswani et al. (2017) and PyTorch do"
+        }
+      ],
+      "category": "adversarial",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s14.html#78",
+          "sections": [
+            "Attention > The fix: divide by \\(\\sqrt{d_k}\\), as Vaswani et al. (2017) and PyTorch do"
+          ],
+          "distance": 0.2106
+        },
+        {
+          "chunk_key": "dl-s14.html#73",
+          "sections": [
+            "Attention > Unscaled, the softmax is nearly a hard argmax at initialization"
+          ],
+          "distance": 0.2463
+        },
+        {
+          "chunk_key": "dl-s14.html#77",
+          "sections": [
+            "Attention > The fix: divide by \\(\\sqrt{d_k}\\), as Vaswani et al. (2017) and PyTorch do"
+          ],
+          "distance": 0.2422
+        },
+        {
+          "chunk_key": "dl-s14.html#68",
+          "sections": [
+            "Attention > Measured: unscaled, the top weight climbs toward 1 as \\(d_k\\) grows"
+          ],
+          "distance": 0.2376
+        },
+        {
+          "chunk_key": "dl-s14.html#69",
+          "sections": [
+            "Attention > Measured: unscaled, the top weight climbs toward 1 as \\(d_k\\) grows"
+          ],
+          "distance": 0.2538
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The premise is incorrect: dividing all dot products by the same positive number √d_k never changes which key scores highest, because it changes only how peaked the weights are, not their order. Dividing by √d_k keeps the score variance at 1, so the top weight stays softly peaked (between 0.23 and 0.25 at every d_k) instead of climbing toward 1 as unscaled scores do.",
+        "citations": [
+          "dl-s14.html#78",
+          "dl-s14.html#73"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model rejects the false premise, stating that dividing by the same positive √d_k never changes which key ranks highest, only the peakedness, matching the reference. It adds a specific claim that the top weight stays between 0.23 and 0.25 at every d_k, which is extra detail not in the reference and is not supported by it, but the core facts align and nothing contradicts the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-047",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Since LoRA freezes the base weights, how does it prevent catastrophic forgetting?",
+      "expected_answer": "It doesn't: with the adapter attached, the model forgets the original task about as badly as full fine-tuning. Removing the adapter restores the base model, which is reversibility, not protection.",
+      "source_refs": [
+        {
+          "doc": "dl-s19.html",
+          "section": "Fine-Tuning & LoRA > What LoRA does not buy is protection from forgetting"
+        }
+      ],
+      "category": "adversarial",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s19.html#72",
+          "sections": [
+            "Fine-Tuning & LoRA > Each row has a cause, and LoRA's rows show reversibility, not immunity"
+          ],
+          "distance": 0.2698
+        },
+        {
+          "chunk_key": "dl-s19.html#71",
+          "sections": [
+            "Fine-Tuning & LoRA > What LoRA does not buy is protection from forgetting"
+          ],
+          "distance": 0.2029
+        },
+        {
+          "chunk_key": "dl-s19.html#80",
+          "sections": [
+            "Fine-Tuning & LoRA > QLoRA stores the frozen base in 4 bits and trains LoRA adapters on top"
+          ],
+          "distance": 0.266
+        },
+        {
+          "chunk_key": "dl-s19.html#59",
+          "sections": [
+            "Fine-Tuning & LoRA > One frozen base can serve many tasks, each with its own small adapter"
+          ],
+          "distance": 0.2424
+        },
+        {
+          "chunk_key": "dl-s19.html#75",
+          "sections": [
+            "Fine-Tuning & LoRA > Self-check on forgetting, replay and adapters"
+          ],
+          "distance": 0.2679
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The documents contradict this premise: LoRA does not prevent catastrophic forgetting. With LoRA attached, the loss on task A rises to 3.6655, as bad as full fine-tuning, because the adapter weights in W_q and W_v change and affect attention at every position; LoRA only offers reversibility, since removing it restores the exact pretrained behavior, and mixing about 10% task-A data (replay) is what brings A back.",
+        "citations": [
+          "dl-s19.html#72",
+          "dl-s19.html#71",
+          "dl-s19.html#75"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model rejects the false premise that freezing base weights prevents forgetting, matching the reference that LoRA forgets about as badly as full fine-tuning and only offers reversibility; the extra specifics (loss value, replay) are additional detail not contradicting the reference."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 0.5,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-048",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "How does gradient clipping let a vanilla RNN learn long-range dependencies?",
+      "expected_answer": "It doesn't. Clipping patches exploding gradients and keeps a run alive (no NaNs), but does not fix vanishing gradients or make the RNN learn the long dependency; that needs the LSTM's gated cell state.",
+      "source_refs": [
+        {
+          "doc": "dl-s13.html",
+          "section": "Sequence Modeling: RNNs and LSTMs > Clipping keeps a run alive; it does not make it learn the long dependency"
+        },
+        {
+          "doc": "dl-s13.html",
+          "section": "Sequence Modeling: RNNs and LSTMs > The patch for exploding: clip the gradient's norm before each step"
+        }
+      ],
+      "category": "adversarial",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s13.html#34",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Clipping keeps a run alive; it does not make it learn the long dependency"
+          ],
+          "distance": 0.1545
+        },
+        {
+          "chunk_key": "dl-s13.html#36",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Clipping keeps a run alive; it does not make it learn the long dependency"
+          ],
+          "distance": 0.147
+        },
+        {
+          "chunk_key": "dl-s13.html#59",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Self-check: a short memory, a stable loss, an open gate"
+          ],
+          "distance": 0.1777
+        },
+        {
+          "chunk_key": "dl-s13.html#56",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > In your training run: five symptoms, their causes and fixes"
+          ],
+          "distance": 0.2354
+        },
+        {
+          "chunk_key": "dl-s13.html#35",
+          "sections": [
+            "Sequence Modeling: RNNs and LSTMs > Clipping keeps a run alive; it does not make it learn the long dependency"
+          ],
+          "distance": 0.1933
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "The documents say it does not: clipping only keeps the run alive by bounding each update (clipped loss stays around 33 to 35 versus NaN unclipped), but it cannot raise the vanishing gradients at small tanh derivatives, so the RNN does not learn the 60-step dependency and the loss merely levels off.",
+        "citations": [
+          "dl-s13.html#34",
+          "dl-s13.html#35",
+          "dl-s13.html#36"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model rejects the false premise as the reference does: clipping only prevents exploding gradients/NaNs and does not fix vanishing gradients or enable learning long-range dependencies. It adds specific numbers (loss 33-35, 60-step dependency) that are extra detail not contradicted by the reference, and it does not mention LSTM gating explicitly, a minor omission."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 0.5,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    },
+    {
+      "id": "dl-050",
+      "corpus": "dl-slides",
+      "split": "dev",
+      "question": "Since AI use is allowed on homework with disclosure, can I submit AI-written solution code for HW2?",
+      "expected_answer": "No. Homework (HW1-HW4) is Tier 1, restricted: conceptual, syntax and error-message questions are allowed with a brief AI-use statement, but no AI-written solution code. AI as a collaborator with disclosure is the project's tier (Tier 2).",
+      "source_refs": [
+        {
+          "doc": "dl-s01.html",
+          "section": "Course Introduction > AI use: three tiers"
+        }
+      ],
+      "category": "adversarial",
+      "retrieved": [
+        {
+          "chunk_key": "dl-s01.html#11",
+          "sections": [
+            "Course Introduction > AI use: three tiers"
+          ],
+          "distance": 0.207
+        },
+        {
+          "chunk_key": "dl-s08.html#0",
+          "sections": [
+            "",
+            "PyTorch in Practice",
+            "PyTorch in Practice > Admin: HW1 is due today"
+          ],
+          "distance": 0.3051
+        },
+        {
+          "chunk_key": "dl-s04.html#2",
+          "sections": [
+            "Backpropagation I > HW1: deadline and points",
+            "Backpropagation I > HW1: policy, and a sanity check"
+          ],
+          "distance": 0.32
+        },
+        {
+          "chunk_key": "dl-s17.html#1",
+          "sections": [
+            "Transformer II > The proposal, HW2 and HW3 come next"
+          ],
+          "distance": 0.331
+        },
+        {
+          "chunk_key": "dl-s12.html#1",
+          "sections": [
+            "Training in Practice: Debugging, Diagnosis, Experiment Tracking > 📋 Admin: HW2 out today; Quiz 2 next session"
+          ],
+          "distance": 0.3459
+        }
+      ],
+      "answer": {
+        "found": true,
+        "answer": "No. The premise is wrong: homework is Tier 1 (Restricted), where AI-written solution code is not allowed and you must include a brief AI-use statement per submission. Disclosure does not permit AI-written solution code; AI open use with disclosure applies only to the semester project (Tier 2).",
+        "citations": [
+          "dl-s01.html#11",
+          "dl-s04.html#2"
+        ]
+      },
+      "judge": {
+        "model": "claude-haiku-5-5",
+        "verdict": "correct",
+        "reason": "The model answer rejects the false premise, states homework is Tier 1 restricted with no AI-written solution code, and notes disclosure-based AI collaboration is Tier 2 for the project, matching the reference answer's key facts."
+      },
+      "metrics": {
+        "abstained": false,
+        "hit": true,
+        "recall": 1.0,
+        "rr": 1.0,
+        "verdict": "correct",
+        "citations_valid": true,
+        "citation_supports": true
+      }
+    }
+  ]
+}

@@ -14,9 +14,21 @@ Answers:
 A chunk covers a source_ref when its doc matches and the ref's section is one
 of the chunk's sections, or when the chunk's doc is an alternate source for
 the ref's doc (config [eval.alternate_sources], e.g. the review deck).
+
+Each source_refs entry is one needed source: a ref, or a list of alternative
+refs (any one suffices). recall = covered entries / entries.
 """
 
 from statistics import mean
+
+
+def ref_groups(refs: list) -> list[list[dict]]:
+    """Normalize source_refs to a list of alternative-groups: [ref, [r1, r2]] -> [[ref], [r1, r2]]."""
+    return [entry if isinstance(entry, list) else [entry] for entry in refs]
+
+
+def all_refs(refs: list) -> list[dict]:
+    return [r for group in ref_groups(refs) for r in group]
 
 
 def chunk_covers_ref(chunk: dict, ref: dict, alternates: dict) -> bool:
@@ -27,21 +39,24 @@ def chunk_covers_ref(chunk: dict, ref: dict, alternates: dict) -> bool:
     return ref["doc"] in alternates.get(chunk["doc"], [])
 
 
-def retrieval_scores(refs: list[dict], chunks: list[dict], alternates: dict) -> dict:
-    covered = [any(chunk_covers_ref(c, r, alternates) for c in chunks) for r in refs]
+def retrieval_scores(refs: list, chunks: list[dict], alternates: dict) -> dict:
+    groups = ref_groups(refs)
+    covered = [any(chunk_covers_ref(c, r, alternates) for c in chunks for r in g) for g in groups]
+    flat = all_refs(refs)
     first = next(
-        (rank for rank, c in enumerate(chunks, 1) if any(chunk_covers_ref(c, r, alternates) for r in refs)),
+        (rank for rank, c in enumerate(chunks, 1) if any(chunk_covers_ref(c, r, alternates) for r in flat)),
         None,
     )
-    return {"hit": any(covered), "recall": sum(covered) / len(refs), "rr": 1 / first if first else 0.0}
+    return {"hit": any(covered), "recall": sum(covered) / len(groups), "rr": 1 / first if first else 0.0}
 
 
-def citation_scores(citations: list[str], chunks: list[dict], refs: list[dict], alternates: dict) -> dict:
+def citation_scores(citations: list[str], chunks: list[dict], refs: list, alternates: dict) -> dict:
     retrieved = {c["chunk_key"]: c for c in chunks}
+    flat = all_refs(refs)
     return {
         "citations_valid": all(k in retrieved for k in citations),
         "citation_supports": any(
-            chunk_covers_ref(retrieved[k], r, alternates) for k in citations if k in retrieved for r in refs
+            chunk_covers_ref(retrieved[k], r, alternates) for k in citations if k in retrieved for r in flat
         ),
     }
 

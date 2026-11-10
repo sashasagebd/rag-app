@@ -91,7 +91,7 @@ Each line of a `.jsonl` file in `data/questions/` holds one question:
 | `split` | `"dev"` \| `"test"` | tune on dev; report on test |
 | `question` | string | |
 | `expected_answer` | string \| null | `null` only for `unanswerable` |
-| `source_refs` | list | `[{"doc": "handbook.pdf", "page": 12, "section": "Benefits > Leave"}]`. Each ref needs `doc` plus `page` and/or `section`. Empty only for `unanswerable` |
+| `source_refs` | list | `[{"doc": "handbook.pdf", "page": 12, "section": "Benefits > Leave"}]`. Each ref needs `doc` plus `page` and/or `section`. An entry may be a list of 2+ refs meaning "any one of these". Empty only for `unanswerable` |
 | `category` | enum | `single_fact`, `exact`, `multi_hop`, `unanswerable`, `adversarial` |
 
 See `data/questions/examples.jsonl` for examples.

@@ -1,0 +1,7 @@
+# E4: hybrid retrieval = vector search + Postgres keyword search, merged by
+# reciprocal rank fusion. Hypothesis: exact terms ("LeNet", "8 heads", "61,706")
+# rescue the `exact` questions the embedding misses.
+extends = "configs/baseline.toml"
+
+[retrieval]
+method = "hybrid"

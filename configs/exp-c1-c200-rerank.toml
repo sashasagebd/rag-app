@@ -1,0 +1,7 @@
+# C1 (combination): E2's 200-token chunks + E5's reranker (20 candidates -> top 5).
+# Short chunks should also make the reranker several times faster.
+extends = "configs/exp-e2-c200.toml"
+
+[retrieval]
+rerank_model = "BAAI/bge-reranker-base"
+rerank_candidates = 20

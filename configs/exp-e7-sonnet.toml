@@ -1,0 +1,7 @@
+# E7: Sonnet 5.5 answers instead of Haiku, on the best retrieval (C2). Judge unchanged.
+# Hypothesis: with retrieval near-perfect, the answer model is the limit
+# (C2's Haiku answered "not found" to two false-premise questions).
+extends = "configs/exp-c2-c200-rerank-k10.toml"
+
+[answer]
+model = "claude-sonnet-5-5"

@@ -1,0 +1,8 @@
+# E5: fetch 20 chunks by vector search, re-score each with a local cross-encoder,
+# keep the best 5. Hypothesis: fixes topic-vs-title mismatches the embedding misses.
+# Costs ~1-2 s per question on a CPU (scores are cached).
+extends = "configs/baseline.toml"
+
+[retrieval]
+rerank_model = "BAAI/bge-reranker-base"
+rerank_candidates = 20

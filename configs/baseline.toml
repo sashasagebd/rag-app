@@ -8,6 +8,7 @@ k = 5                          # chunks given to the answer model
 model = "claude-haiku-5-5"
 effort = "low"
 max_tokens = 4000
+prompt = "v1"                  # system prompt version in src/answer/answer.py (PROMPTS)
 
 [judge]
 model = "claude-haiku-5-5"     # re-judge with --judge-model claude-opus-5-5 to check it

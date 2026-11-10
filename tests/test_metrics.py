@@ -63,3 +63,15 @@ def test_aggregate_separates_answerable_and_unanswerable():
     assert agg["hit_at_k"] == 0.5 and agg["correct"] == 0.5 and agg["false_abstention"] == 0.5
     assert agg["correct_abstention"] == 0.5
     assert agg["citation_supports"] == 1.0  # only over answered answerable questions
+
+
+def test_alternatives_count_as_one_needed_source():
+    alt = [{"doc": "a.html", "section": "S1"}, {"doc": "b.html", "section": "S9"}]
+    second = {"doc": "c.html", "section": "S2"}
+    chunks = [chunk("b#0", "b.html", "S9")]
+    m = score_question(q("multi_hop", [alt, second]), chunks,
+                       {"found": True, "answer": "...", "citations": ["b#0"]}, "partial", ALT)
+    assert m["recall"] == 0.5  # the alternative group is covered, the second source is not
+    assert m["citation_supports"]
+    single = score_question(q("exact", [alt]), chunks, {"found": True, "answer": "...", "citations": []}, "correct", ALT)
+    assert single["recall"] == 1.0  # one alternative found = fully covered

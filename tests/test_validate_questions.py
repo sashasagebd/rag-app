@@ -68,3 +68,12 @@ def test_duplicate_ids_and_bad_json(tmp_path):
     assert len(errors) == 2
     assert "duplicate id 'q1'" in errors[0] and ":2:" in errors[0]
     assert "invalid JSON" in errors[1] and ":3:" in errors[1]
+
+
+def test_alternative_refs_are_valid_and_need_two():
+    alt = [{"doc": "a.pdf", "page": 1}, {"doc": "b.pdf", "section": "X"}]
+    assert validate_question(good_question(source_refs=[alt, {"doc": "c.pdf", "page": 2}])) == []
+    errors = validate_question(good_question(source_refs=[[{"doc": "a.pdf", "page": 1}]]))
+    assert errors == ["source_refs[0]: a list of alternatives needs at least 2 refs"]
+    errors = validate_question(good_question(source_refs=[[{"doc": "a.pdf"}, {"doc": "b.pdf", "page": 1}]]))
+    assert errors == ["source_refs[0][0]: needs 'page' and/or 'section'"]

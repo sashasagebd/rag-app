@@ -1,0 +1,10 @@
+# E3: rewrite inline LaTeX as plain symbols before embedding ("\(1\times1\)" -> "1×1").
+# Hypothesis: math-heavy headings embed badly and hide `exact` facts.
+# Ingest: python -m ingest.run data/raw/notes --collection dl-slides-latex --config configs/exp-e3-latex.toml
+extends = "configs/baseline.toml"
+
+[chunking]
+clean_latex = true
+
+[retrieval]
+collection = "dl-slides-latex"

@@ -1,0 +1,7 @@
+# E1: give the answer model 10 chunks instead of 5.
+# Hypothesis: multi_hop questions often retrieve one source but miss the second;
+# a larger k may catch it. Cost: about twice the input tokens per answer.
+extends = "configs/baseline.toml"
+
+[retrieval]
+k = 10

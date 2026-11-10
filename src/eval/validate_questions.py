@@ -5,6 +5,11 @@ Usage (from the repo root):
     python -m eval.validate_questions path/a.jsonl dir/
 
 Exits 0 if everything is valid, 1 otherwise. Prints every error with file:line.
+
+Each entry of source_refs is one source the answer needs: either a ref
+{"doc", "page"?, "section"?} or a list of 2+ refs that are alternatives
+(the same fact stated in several places; any one of them is enough).
+A multi_hop question has several entries; a single-fact question has one.
 """
 
 import argparse
@@ -46,8 +51,14 @@ def validate_question(q: object) -> list[str]:
     if not isinstance(refs, list):
         errors.append("'source_refs' must be a list")
         refs = []
-    for i, ref in enumerate(refs):
-        errors += [f"source_refs[{i}]: {e}" for e in validate_ref(ref)]
+    for i, entry in enumerate(refs):
+        if isinstance(entry, list):  # alternatives: any one of these sources is enough
+            if len(entry) < 2:
+                errors.append(f"source_refs[{i}]: a list of alternatives needs at least 2 refs")
+            for j, ref in enumerate(entry):
+                errors += [f"source_refs[{i}][{j}]: {e}" for e in validate_ref(ref)]
+        else:
+            errors += [f"source_refs[{i}]: {e}" for e in validate_ref(entry)]
 
     if q["category"] == "unanswerable":
         if q["expected_answer"] is not None:

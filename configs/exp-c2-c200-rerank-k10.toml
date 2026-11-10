@@ -1,0 +1,7 @@
+# C2 (combination): C1 with E1's larger k: 30 candidates -> top 10 short chunks
+# (10 x 200 tokens is about the same input as the baseline's 5 x 500).
+extends = "configs/exp-c1-c200-rerank.toml"
+
+[retrieval]
+k = 10
+rerank_candidates = 30

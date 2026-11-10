@@ -18,6 +18,13 @@ model = "BAAI/bge-small-en-v1.5"   # reads up to 512 tokens
 dim = 384                          # must match vector(384) in db/schema.sql
 batch_size = 32
 
+[retrieval]
+k = 5                 # chunks given to the answer model
+method = "vector"     # "vector" or "hybrid" (vector + keyword, rank fusion)
+# collection = "..."  # default: the corpus name
+# rerank_model = "BAAI/bge-reranker-base"   # optional cross-encoder rerank
+# rerank_candidates = 20                    # how many chunks it re-scores
+
 [database]
 # The DATABASE_URL environment variable overrides this.
 url = "postgresql://rag:rag@localhost:5433/rag"

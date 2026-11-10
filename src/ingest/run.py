@@ -51,7 +51,8 @@ def main() -> int:
     # 2. chunk
     chunking = config["chunking"]
     count_tokens = make_token_counter(config["embedding"]["model"])
-    chunks = chunk_docs(docs, chunking["method"], chunking["max_tokens"], count_tokens)
+    chunks = chunk_docs(docs, chunking["method"], chunking["max_tokens"], count_tokens,
+                        chunking.get("clean_latex", False))
     chunks_path = Path(paths["chunks_dir"]) / f"{args.collection}.jsonl"
     write_chunks(chunks, chunks_path)
     print(f"2/3 chunked {len(chunks)} chunks ({chunking['method']}, max {chunking['max_tokens']} tokens) -> {chunks_path}")

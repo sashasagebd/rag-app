@@ -25,6 +25,18 @@ def test_deep_merge_keeps_untouched_keys():
     assert base["retrieval"]["k"] == 5  # input not mutated
 
 
+def test_extends_chains_configs(tmp_path, monkeypatch):
+    from common.config import load_config
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs").mkdir()
+    (tmp_path / "configs/default.toml").write_text('[retrieval]\nk = 5\nmethod = "vector"\n[answer]\nmodel = "a"\n')
+    (tmp_path / "configs/base.toml").write_text('[answer]\nmodel = "b"\n')
+    (tmp_path / "configs/exp.toml").write_text('extends = "configs/base.toml"\n[retrieval]\nk = 10\n')
+    config = load_config("configs/exp.toml")
+    assert config == {"retrieval": {"k": 10, "method": "vector"}, "answer": {"model": "b"}}
+
+
 def test_dotenv_reads_values_without_overriding(tmp_path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text('# comment\nRAG_TEST_A=one\nRAG_TEST_B="two"\n\nRAG_TEST_C=from-file\n')

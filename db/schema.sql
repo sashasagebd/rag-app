@@ -1,4 +1,4 @@
--- Applied by src/ingest/embed_load.py before every load. Safe to rerun.
+-- Applied on every connection (src/ingest/embed_load.py: connect). Safe to rerun.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -18,6 +18,21 @@ CREATE TABLE IF NOT EXISTS chunks (
     text          text NOT NULL,        -- exactly what was embedded
     n_tokens      integer NOT NULL,
     chunker       text NOT NULL,        -- e.g. "pack_sections:500", to tell experiments apart
-    embedding     vector(384) NOT NULL, -- dim of BAAI/bge-small-en-v1.5; change with the model
+    embedding     vector NOT NULL,      -- any size; each collection uses one model ([embedding].dim)
     UNIQUE (collection_id, chunk_key)
 );
+
+-- Migration for tables created with the old fixed vector(384) column. No-op once done.
+DO $$
+BEGIN
+    IF (SELECT atttypmod FROM pg_attribute
+        WHERE attrelid = 'chunks'::regclass AND attname = 'embedding') <> -1 THEN
+        ALTER TABLE chunks ALTER COLUMN embedding TYPE vector;
+    END IF;
+END $$;
+
+-- Keyword search (hybrid retrieval): Postgres full-text vector of the chunk text,
+-- kept up to date by Postgres itself, with an index for fast matching.
+ALTER TABLE chunks ADD COLUMN IF NOT EXISTS
+    tsv tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED;
+CREATE INDEX IF NOT EXISTS chunks_tsv_idx ON chunks USING gin (tsv);

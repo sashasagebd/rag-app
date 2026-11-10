@@ -1,0 +1,7 @@
+# E8: answer prompt v2, which says a contradicted premise is an answer, not "not found".
+# On C2's retrieval with Haiku. Hypothesis: fixes dl-007 / dl-048 without Sonnet's cost.
+# Watch: unanswerable abstention must stay at 1.00.
+extends = "configs/exp-c2-c200-rerank-k10.toml"
+
+[answer]
+prompt = "v2"

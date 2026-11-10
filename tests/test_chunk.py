@@ -45,3 +45,24 @@ def test_chunk_docs_never_crosses_documents_and_adds_keys():
     ]
     assert chunks[0]["chunker"] == "pack_sections:100"
     assert chunks[0]["n_tokens"] == 3  # "## A\nx"
+
+
+def test_clean_latex_rewrites_math_spans_only():
+    from ingest.chunk import clean_latex
+
+    assert clean_latex(r"A \(1\times1\) convolution") == "A 1×1 convolution"
+    assert clean_latex(r"divide by \(\sqrt{d_k}\)") == "divide by √(d_k)"
+    assert clean_latex(r"\(\tfrac{\alpha}{r}BA\)") == "(α)/(r)BA"
+    assert clean_latex(r"\(\operatorname{softmax}(\textcolor{#8250df}{Q}K^\top)\)") == "softmax(QKᵀ)"
+    code = "d = {'a': 1}  # not math"
+    assert clean_latex(code) == code
+
+
+def test_clean_latex_keeps_original_section_names():
+    from ingest.chunk import chunk_docs
+
+    d = doc(([r"A \(1\times1\) conv"], r"mixes \(C\) channels"))
+    [c] = chunk_docs([d], "pack_sections", 100, count_words, clean_latex_text=True)
+    assert c["text"] == "## A 1×1 conv\nmixes C channels"
+    assert c["sections"] == [r"A \(1\times1\) conv"]
+    assert c["chunker"] == "pack_sections:100+clean_latex"

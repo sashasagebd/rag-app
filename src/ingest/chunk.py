@@ -18,10 +18,15 @@ never cross documents. To add a chunker, write the function and add it to CHUNKE
 
 Each section's text is prefixed with its heading path ("## A > B"), so the
 embedding sees which slide or section the text came from.
+
+With [chunking] clean_latex = true, inline math in the chunk text is rewritten
+as plain symbols ("\\(1\\times1\\)" -> "1×1") so it embeds like ordinary words.
+`sections` keeps the original headings, since citations must match source_refs.
 """
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Callable
@@ -116,6 +121,41 @@ CHUNKERS: dict[str, Callable[..., list[dict]]] = {
 }
 
 
+# ---------- LaTeX cleaning ----------
+
+LATEX_SYMBOLS = {
+    "times": "×", "cdot": "·", "le": "≤", "leq": "≤", "ge": "≥", "geq": "≥", "approx": "≈", "neq": "≠",
+    "in": "∈", "to": "→", "rightarrow": "→", "longrightarrow": "→", "infty": "∞", "partial": "∂",
+    "nabla": "∇", "sum": "Σ", "prod": "Π", "odot": "⊙", "oslash": "⊘", "top": "ᵀ", "lVert": "‖",
+    "rVert": "‖", "Vert": "‖", "ldots": "...", "cdots": "...", "pm": "±", "sim": "~", "mid": "|",
+    "propto": "∝", "alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ε",
+    "varepsilon": "ε", "eta": "η", "theta": "θ", "lambda": "λ", "mu": "μ", "pi": "π", "sigma": "σ",
+    "tau": "τ", "phi": "φ", "kappa": "κ", "Sigma": "Σ", "Delta": "Δ",
+}
+_UNWRAP = r"\\(?:mathrm|mathbf|mathbb|mathcal|boldsymbol|text|textbf|operatorname|mathit|hat|widehat|bar|tilde)\{([^{}]*)\}"
+_MATH_SPAN = re.compile(r"\\\((.+?)\\\)|\\\[(.+?)\\\]", re.DOTALL)
+
+
+def _clean_math(m: str) -> str:
+    for _ in range(3):  # a few passes handle simple nesting like \frac{\sqrt{x}}{2}
+        m = re.sub(r"\\textcolor\{[^{}]*\}\{([^{}]*)\}", r"\1", m)
+        m = re.sub(r"\\[td]?frac\{([^{}]*)\}\{([^{}]*)\}", r"(\1)/(\2)", m)
+        m = re.sub(r"\\sqrt\{([^{}]*)\}", r"√(\1)", m)
+        m = re.sub(_UNWRAP, r"\1", m)
+    m = re.sub(r"\\(?:left|right|big|Big)\b", "", m)
+    m = re.sub(r"\\[,;:! ]|\\q?quad\b", " ", m)
+    m = re.sub(r"\\([A-Za-z]+)", lambda x: LATEX_SYMBOLS.get(x.group(1), x.group(1)), m)
+    m = m.replace("^ᵀ", "ᵀ")  # K^\top -> Kᵀ
+    m = re.sub(r"([_^])\{([^{}]*)\}", r"\1\2", m)
+    m = m.replace("{", "").replace("}", "")
+    return re.sub(r"\s+", " ", m).strip()
+
+
+def clean_latex(text: str) -> str:
+    """Rewrite \\( ... \\) and \\[ ... \\] spans as plain text. Text outside math (e.g. code) is untouched."""
+    return _MATH_SPAN.sub(lambda m: _clean_math(m.group(1) or m.group(2)), text)
+
+
 # ---------- driver ----------
 
 def make_token_counter(model_name: str) -> TokenCounter:
@@ -126,19 +166,22 @@ def make_token_counter(model_name: str) -> TokenCounter:
     return lambda text: len(tokenizer(text, add_special_tokens=False, verbose=False)["input_ids"])
 
 
-def chunk_docs(docs: list[dict], method: str, max_tokens: int, count_tokens: TokenCounter) -> list[dict]:
+def chunk_docs(docs: list[dict], method: str, max_tokens: int, count_tokens: TokenCounter,
+               clean_latex_text: bool = False) -> list[dict]:
     """Run the chosen chunker over every document and add ids and bookkeeping fields."""
     chunker = CHUNKERS[method]
+    label = f"{method}:{max_tokens}" + ("+clean_latex" if clean_latex_text else "")
     out = []
     for doc in docs:
         for i, c in enumerate(chunker(doc, count_tokens, max_tokens)):
+            text = clean_latex(c["text"]) if clean_latex_text else c["text"]
             out.append({
                 "chunk_key": f"{doc['source']}#{i}",
                 "doc": doc["source"],
                 "sections": c["sections"],
-                "text": c["text"],
-                "n_tokens": count_tokens(c["text"]),
-                "chunker": f"{method}:{max_tokens}",
+                "text": text,
+                "n_tokens": count_tokens(text),
+                "chunker": label,
             })
     return out
 
@@ -172,7 +215,8 @@ def main() -> int:
         return 1
 
     count_tokens = make_token_counter(config["embedding"]["model"])
-    chunks = chunk_docs(docs, config["chunking"]["method"], config["chunking"]["max_tokens"], count_tokens)
+    ch = config["chunking"]
+    chunks = chunk_docs(docs, ch["method"], ch["max_tokens"], count_tokens, ch.get("clean_latex", False))
     out_path = Path(config["paths"]["chunks_dir"]) / f"{args.collection}.jsonl"
     write_chunks(chunks, out_path)
     print(f"{len(docs)} docs -> {len(chunks)} chunks -> {out_path}")

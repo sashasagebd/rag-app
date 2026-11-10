@@ -1,0 +1,10 @@
+# E2: 200-token chunks instead of 500. Long slides get split into focused pieces.
+# Hypothesis: a key fact on a long slide is diluted in a 500-token embedding.
+# Ingest: python -m ingest.run data/raw/notes --collection dl-slides-c200 --config configs/exp-e2-c200.toml
+extends = "configs/baseline.toml"
+
+[chunking]
+max_tokens = 200
+
+[retrieval]
+collection = "dl-slides-c200"
