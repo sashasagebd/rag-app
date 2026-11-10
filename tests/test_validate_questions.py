@@ -20,8 +20,10 @@ def good_question(**overrides):
     return q
 
 
-def test_example_file_is_valid():
-    assert validate_files([REPO / "data/questions/examples.jsonl"]) == []
+def test_committed_question_files_are_valid():
+    files = sorted((REPO / "data/questions").glob("*.jsonl"))
+    assert files, "no question files found"
+    assert validate_files(files) == []
 
 
 def test_good_question_passes():

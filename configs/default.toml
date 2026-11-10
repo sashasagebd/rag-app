@@ -2,6 +2,22 @@
 [paths]
 raw_dir = "data/raw"
 parsed_dir = "data/parsed"
+chunks_dir = "data/chunks"
 questions_dir = "data/questions"
 
-# Later: [chunking], [embedding], [retrieval] settings go here.
+[chunking]
+# Name of a function in src/ingest/chunk.py's CHUNKERS table.
+method = "pack_sections"
+# Measured with the embedding model's own tokenizer (below).
+max_tokens = 500
+
+[embedding]
+model = "BAAI/bge-small-en-v1.5"   # reads up to 512 tokens
+dim = 384                          # must match vector(384) in db/schema.sql
+batch_size = 32
+
+[database]
+# The DATABASE_URL environment variable overrides this.
+url = "postgresql://rag:rag@localhost:5433/rag"
+
+# Later: [retrieval] settings go here.

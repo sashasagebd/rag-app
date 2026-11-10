@@ -19,6 +19,7 @@ How sections are made:
           (table of contents): the path in effect once all bookmarks up to and
           including this page are applied. No bookmarks -> heading_path = [].
   - HTML: a new section starts at every <h1>-<h6>. `page` is null.
+          Each table row becomes one line, cells joined with " | ".
 
 This step does NOT chunk. Chunking reads these JSON files later.
 """
@@ -103,21 +104,29 @@ def parse_html(path: Path) -> list[dict]:
             sections.append({"page": None, "heading_path": [t for _, t in stack], "text": text})
         lines.clear()
 
-    last_block = None
+    # Where the previous piece of text came from, to decide how to join the next one:
+    # same block -> " ", same table row but a new cell -> " | ", otherwise a new line.
+    last_block = last_row = last_cell = None
     for node in root.descendants:
         if isinstance(node, Tag) and node.name in HEADING_TAGS:
             flush()
             push_heading(stack, int(node.name[1]), clean_text(node.get_text(" ")))
-            last_block = None
+            last_block = last_row = last_cell = None
         elif type(node) is NavigableString:  # excludes comments, doctype, CDATA
-            if not node.strip() or any(p.name in HEADING_TAGS for p in node.parents):
+            text = node.strip()
+            if not text or any(p.name in HEADING_TAGS for p in node.parents):
                 continue
             block = next((p for p in node.parents if p.name in BLOCK_TAGS), None)
-            if block is last_block and lines:
-                lines[-1] += " " + node.strip()
+            cell = node.find_parent(["td", "th"])
+            row = cell.find_parent("tr") if cell else None
+
+            if lines and row is not None and row is last_row:
+                lines[-1] += (" " if cell is last_cell else " | ") + text
+            elif lines and block is last_block:
+                lines[-1] += " " + text
             else:
-                lines.append(node.strip())
-                last_block = block
+                lines.append(text)
+            last_block, last_row, last_cell = block, row, cell
     flush()
     return sections
 
@@ -172,10 +181,16 @@ def main() -> int:
             print(f"FAIL {path}: {e}", file=sys.stderr)
             failures += 1
             continue
-        out_path = out_dir / f"{path.name}.json"
-        out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        out_path = write_parsed(result, out_dir)
         print(f"ok   {path} -> {out_path} ({len(result['sections'])} sections)")
     return 1 if failures else 0
+
+
+def write_parsed(result: dict, out_dir: Path) -> Path:
+    """Save one parse result as <out_dir>/<source filename>.json and return the path."""
+    out_path = out_dir / f"{result['source']}.json"
+    out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return out_path
 
 
 if __name__ == "__main__":

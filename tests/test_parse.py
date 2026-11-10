@@ -31,6 +31,24 @@ def test_html_drops_boilerplate():
         assert junk not in all_text
 
 
+def test_html_table_rows_become_lines(tmp_path):
+    html = tmp_path / "grading.html"
+    html.write_text(
+        "<h2>Grading</h2><table>"
+        "<tr><th>Component</th><th>UG</th><th>Grad</th></tr>"
+        "<tr><td>Homework <b>HW1-HW4</b></td><td>40%</td><td><p>40%</p></td></tr>"
+        "<tr><td>Quizzes</td><td>20%</td><td>15%</td></tr>"
+        "</table><p>After the table.</p>"
+    )
+    [section] = parse_file(html)["sections"]
+    assert section["text"] == (
+        "Component | UG | Grad\n"
+        "Homework HW1-HW4 | 40% | 40%\n"
+        "Quizzes | 20% | 15%\n"
+        "After the table."
+    )
+
+
 def make_pdf(path: Path) -> None:
     """Build a 3-page PDF with bookmarks: Intro (p1), Benefits (p2) > Leave (p3)."""
     doc = pymupdf.open()

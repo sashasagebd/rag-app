@@ -2,7 +2,7 @@
 
 A document Q&A app that answers **only** from the documents you provide, with citations, plus an evaluation harness that scores retrieval and answers against known-answer questions.
 
-**Status:** foundation only. Parsing and the question format are built. Chunking, embedding, retrieval and answering are not built yet.
+**Status:** ingestion and the eval question set are built. Retrieval, answering and scoring are not built yet.
 
 ## Setup
 
@@ -11,7 +11,8 @@ Requires Python 3.11+ and Docker.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"        # sentence-transformers pulls in PyTorch (~2 GB)
+pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU-only PyTorch, skips ~2 GB of CUDA
+pip install -e ".[dev]"
 
 cp .env.example .env
 docker compose up -d --wait    # Postgres 17 + pgvector on localhost:5433
@@ -29,7 +30,15 @@ The host port is **5433** so it doesn't clash with a local Postgres on 5432. `do
 
 Run every command from the repo root. Paths come from `configs/default.toml`.
 
-**Parse documents.** Put PDF/HTML files in `data/raw/`, then run:
+**Ingest a folder into a collection** (parse, chunk, embed, load into Postgres):
+
+```bash
+python -m ingest.run data/raw/notes --collection dl-slides
+```
+
+The first run downloads the embedding model (`BAAI/bge-small-en-v1.5`, ~130 MB). Re-running replaces the collection's chunks. Intermediate files land in `data/parsed/` and `data/chunks/<collection>.jsonl` so you can inspect each stage. Chunking and embedding settings are in `configs/default.toml`.
+
+**Or run the stages one at a time.** Parse first: put PDF/HTML files in `data/raw/`, then run:
 
 ```bash
 python -m ingest.parse                     # everything in data/raw/
@@ -37,6 +46,11 @@ python -m ingest.parse data/raw/foo.pdf    # one file
 ```
 
 Each input becomes `data/parsed/<filename>.json`, a list of sections with `page`, `heading_path` and `text`. See the docstring in `src/ingest/parse.py` for the exact rules.
+
+```bash
+python -m ingest.chunk data/parsed --collection dl-slides   # -> data/chunks/dl-slides.jsonl
+python -m ingest.embed_load --collection dl-slides          # -> Postgres
+```
 
 **Validate eval questions:**
 
@@ -73,8 +87,13 @@ configs/default.toml       paths (later: chunking/embedding/retrieval settings)
 db/init.sql                enables pgvector on first DB start
 data/raw/                  source documents (git-ignored)
 data/parsed/               parse output, one JSON per document (git-ignored)
+data/chunks/               chunk output, one JSONL per collection (git-ignored)
 data/questions/            eval questions (JSONL)
 src/ingest/parse.py        PDF/HTML -> sections JSON
+src/ingest/chunk.py        sections -> chunks (pluggable chunkers)
+src/ingest/embed_load.py   chunks -> embeddings -> Postgres
+src/ingest/run.py          all three in one command
+db/schema.sql              collections + chunks tables
 src/retrieval/             (empty, not built yet)
 src/eval/validate_questions.py
 tests/
