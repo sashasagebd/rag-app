@@ -23,20 +23,10 @@ from common.config import load_config
 from common.llm import cost_usd
 from ingest.embed_load import connect, database_url
 from notebook import store
-from notebook.ask import ask
+from notebook.ask import ask, cite_label
 from notebook.fetch import FetchError
 from notebook.ingest import add_bytes, add_url
 from notebook.store import NotebookError
-
-
-def where(chunk: dict) -> str:
-    """'paper.pdf, p. 3-4' or 'slides.html, Intro > Grading' for a citation line."""
-    pages = chunk.get("pages") or []
-    if pages:
-        span = str(pages[0]) if len(pages) == 1 else f"{pages[0]}-{pages[-1]}"
-        return f"{chunk['doc']}, p. {span}"
-    named = [s for s in chunk["sections"] if s]
-    return f"{chunk['doc']}, {named[0]}" if named else chunk["doc"]
 
 
 def cmd_add(conn, args, config, cache) -> int:
@@ -74,7 +64,7 @@ def cmd_ask(conn, args, config, cache) -> int:
     if r["cited_chunks"]:
         print("\nSources:")
         for i, c in enumerate(r["cited_chunks"], 1):
-            print(f"  [{i}] {where(c)}")
+            print(f"  [{i}] {cite_label(c)}")
             if args.show_sources:
                 print(textwrap.indent(textwrap.shorten(c["text"].replace("\n", " "), 600), "      "))
     cost = 0.0 if r["cached"] else cost_usd(r["usage"], config["answer"]["model"], config["pricing"])
@@ -119,10 +109,11 @@ def main() -> int:
                     print("no notebooks yet: python -m notebook.cli create <name>")
             elif args.command == "docs":
                 rows = store.list_documents(conn, store.get_notebook(conn, args.notebook))
-                for name, source, doc_type, n_bytes, n_chunks, tokens, added in rows:
+                for name, source, doc_type, n_bytes, n_chunks, tokens, added, status, error in rows:
                     src = f"  from {source}" if source != name else ""
+                    state = "" if status == "ready" else f"  [{status}{': ' + error if error else ''}]"
                     print(f"{name:40} {doc_type:4} {n_bytes / 1e6:6.2f} MB {n_chunks:4} chunks "
-                          f"{tokens:>8,} tokens{src}")
+                          f"{tokens:>8,} tokens{src}{state}")
                 if not rows:
                     print("no documents yet")
             elif args.command == "add":

@@ -60,3 +60,55 @@ CREATE TABLE IF NOT EXISTS documents (
 
 -- PDF pages each chunk covers (empty for HTML). Lets citations say "p. 4".
 ALTER TABLE chunks ADD COLUMN IF NOT EXISTS pages jsonb NOT NULL DEFAULT '[]';
+
+-- ---------- Phase 5: web app accounts ----------
+
+CREATE TABLE IF NOT EXISTS users (
+    id                   serial PRIMARY KEY,
+    username             text NOT NULL UNIQUE,
+    password_hash        text NOT NULL,         -- scrypt, see src/api/security.py
+    api_key_enc          text,                  -- the user's Anthropic key, encrypted with APP_SECRET_KEY
+    api_key_hint         text,                  -- e.g. "sk-ant-…a1b2", safe to show
+    use_server_key       boolean NOT NULL DEFAULT false,  -- admin-granted: may use the server's key
+    daily_question_limit integer,               -- NULL = the [app] default
+    created_at           timestamptz NOT NULL DEFAULT now()
+);
+
+-- One-time invite codes. Only a hash is stored: the code itself is shown once, to the admin.
+CREATE TABLE IF NOT EXISTS invites (
+    code_hash  text PRIMARY KEY,
+    note       text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    used_by    integer REFERENCES users(id) ON DELETE SET NULL,
+    used_at    timestamptz
+);
+
+-- Login sessions. The browser holds a random token in an HttpOnly cookie; only its hash is stored.
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash text PRIMARY KEY,
+    user_id    integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz NOT NULL
+);
+
+-- Every question asked through the app: chat history, daily limits and spend.
+CREATE TABLE IF NOT EXISTS questions (
+    id            bigserial PRIMARY KEY,
+    user_id       integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    collection_id integer NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+    question      text NOT NULL,
+    response      jsonb NOT NULL,       -- answer, citations (with chunk text), route
+    model         text NOT NULL,
+    key_source    text NOT NULL,        -- 'user', 'server' or 'cache'
+    usd           numeric(10, 6) NOT NULL DEFAULT 0,
+    created_at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS questions_user_day_idx ON questions (user_id, created_at);
+
+-- Notebooks belong to a user (NULL = created from the CLI). Replaces the unused text `owner`.
+ALTER TABLE collections DROP COLUMN IF EXISTS owner;
+ALTER TABLE collections ADD COLUMN IF NOT EXISTS user_id integer REFERENCES users(id) ON DELETE CASCADE;
+
+-- Web uploads are processed in the background: 'processing' -> 'ready' or 'failed' (with error).
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ready';
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS error text;

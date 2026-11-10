@@ -3,7 +3,9 @@
     add_bytes(conn, "ml-papers", data, "attention.pdf", source="attention.pdf", config=config)
     add_url(conn, "ml-papers", "https://arxiv.org/pdf/1706.03762", config=config)
 
-Steps, each with a clear error (NotebookError / FetchError) when it fails:
+Steps, each with a clear error (NotebookError / FetchError) when it fails.
+precheck() does 1-4 (fast), build() does 5-6 (slow: the web API runs it in the
+background), add_bytes() does everything in one go (the CLI).
   1. size limit                     [notebook] max_file_mb
   2. file type from the CONTENT     PDF must start with %PDF; else it must look like HTML
   3. PDF checks                     opens, not encrypted, at most max_pdf_pages
@@ -88,22 +90,22 @@ def check_document(data: bytes, limits: dict) -> str:
     return doc_type
 
 
-def add_bytes(conn: psycopg.Connection, notebook: str, data: bytes, name: str, *, source: str, config: dict,
-              cache=None, count_tokens=None, embed_fn=None) -> dict:
-    """Add one document. Returns {"status": "added"|"replaced"|"skipped", "name", ...}.
-    count_tokens / embed_fn replace the real tokenizer / embedding model (tests)."""
-    notebook_id = store.get_notebook(conn, notebook)
-    limits = config["notebook"]
-    name = safe_name(name)
+def precheck(conn: psycopg.Connection, notebook_id: int, data: bytes, name: str, source: str, limits: dict) -> dict:
+    """The fast checks (steps 1-4). Returns the document's metadata, with "skipped" set to a
+    reason if identical bytes are already in the notebook. Raises NotebookError on bad input."""
     doc_type = check_document(data, limits)
-
     sha256 = hashlib.sha256(data).hexdigest()
     same = store.document_with_hash(conn, notebook_id, sha256)
-    if same:
-        return {"status": "skipped", "name": same, "reason": f"the same file is already in the notebook as '{same}'"}
+    return {"name": safe_name(name), "source": source, "doc_type": doc_type, "sha256": sha256,
+            "n_bytes": len(data),
+            "skipped": f"the same file is already in the notebook as '{same}'" if same else None}
 
+
+def build(meta: dict, data: bytes, config: dict, cache=None, count_tokens=None, embed_fn=None):
+    """The slow part (steps 5-6): parse, check for text, chunk, embed. Returns (chunks, embeddings)."""
+    doc_type = meta["doc_type"]
     try:
-        parsed = parse_bytes(data, name, doc_type)
+        parsed = parse_bytes(data, meta["name"], doc_type)
     except Exception:
         raise NotebookError(f"could not extract text from this {doc_type.upper()}")
     if sum(len(s["text"]) for s in parsed["sections"]) < MIN_TEXT_CHARS:
@@ -116,17 +118,36 @@ def add_bytes(conn: psycopg.Connection, notebook: str, data: bytes, name: str, *
     chunks = chunk_docs([parsed], ch["method"], ch["max_tokens"], count_tokens, ch.get("clean_latex", False))
     texts = [c["text"] for c in chunks]
     embeddings = embed_fn(texts) if embed_fn else embed(texts, emb["model"], emb["batch_size"], cache=cache)
+    return chunks, embeddings
 
-    replaced = store.document_exists(conn, notebook_id, name)
-    store.add_document(conn, notebook_id, {"name": name, "source": source, "doc_type": doc_type,
-                                           "sha256": sha256, "n_bytes": len(data)}, chunks, embeddings)
+
+def save_original(limits: dict, notebook: str, name: str, data: bytes) -> None:
+    """Step 8: keep the uploaded bytes so the notebook can be re-ingested later."""
     folder = Path(limits["storage_dir"]) / notebook
     folder.mkdir(parents=True, exist_ok=True)
     (folder / name).write_bytes(data)
 
-    return {"status": "replaced" if replaced else "added", "name": name, "doc_type": doc_type,
+
+def summary(meta: dict, chunks: list[dict], replaced: bool) -> dict:
+    return {"status": "replaced" if replaced else "added", "name": meta["name"], "doc_type": meta["doc_type"],
             "n_chunks": len(chunks), "n_tokens": sum(c["n_tokens"] for c in chunks),
             "n_pages": max((p for c in chunks for p in c["pages"]), default=None)}
+
+
+def add_bytes(conn: psycopg.Connection, notebook: str, data: bytes, name: str, *, source: str, config: dict,
+              cache=None, count_tokens=None, embed_fn=None) -> dict:
+    """Add one document, all steps in one go (the CLI). Returns {"status": "added"|"replaced"|"skipped", ...}.
+    count_tokens / embed_fn replace the real tokenizer / embedding model (tests)."""
+    notebook_id = store.get_notebook(conn, notebook)
+    limits = config["notebook"]
+    meta = precheck(conn, notebook_id, data, name, source, limits)
+    if meta["skipped"]:
+        return {"status": "skipped", "name": meta["name"], "reason": meta["skipped"]}
+    chunks, embeddings = build(meta, data, config, cache, count_tokens, embed_fn)
+    replaced = store.document_exists(conn, notebook_id, meta["name"])
+    store.add_document(conn, notebook_id, meta, chunks, embeddings)
+    save_original(limits, notebook, meta["name"], data)
+    return summary(meta, chunks, replaced)
 
 
 def add_url(conn: psycopg.Connection, notebook: str, url: str, *, config: dict, cache=None, **kwargs) -> dict:

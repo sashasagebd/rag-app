@@ -56,3 +56,24 @@ def test_answer_prompt_wraps_each_chunk_with_its_key():
     assert '<document chunk_key="d.html#0">\nBecause.\n</document>' in msg
     assert msg.endswith("Question: Why?")
     assert msg.count("<document ") == 2
+
+
+def test_cache_works_across_threads(tmp_path):
+    import threading
+
+    cache = Cache(tmp_path / "c.sqlite")
+    errors = []
+
+    def worker(i):
+        try:
+            cache.put("t", i, i * 2)
+            assert cache.get("t", i) == i * 2
+        except Exception as e:  # sqlite3.ProgrammingError before the fix
+            errors.append(e)
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []

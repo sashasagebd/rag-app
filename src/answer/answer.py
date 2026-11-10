@@ -56,8 +56,8 @@ def build_user_message(question: str, chunks: list[dict]) -> str:
 
 
 def answer_question(question: str, chunks: list[dict], *, model: str, effort: str,
-                    max_tokens: int, cache=None, prompt: str = "v1") -> dict:
+                    max_tokens: int, cache=None, prompt: str = "v1", api_key: str | None = None) -> dict:
     return complete_json(
         model=model, system=PROMPTS[prompt], user=build_user_message(question, chunks),
-        schema=SCHEMA, effort=effort, max_tokens=max_tokens, cache=cache,
+        schema=SCHEMA, effort=effort, max_tokens=max_tokens, cache=cache, api_key=api_key,
     )

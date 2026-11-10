@@ -1,0 +1,12 @@
+# The web app (Phase 5): notebook settings + accounts and limits.
+#   APP_SECRET_KEY=... uvicorn api.app:create_app --factory    (reads APP_CONFIG, default this file)
+extends = "configs/notebook.toml"
+
+[app]
+questions_per_day = 30          # per user (each question uses server CPU for search + rerank)
+max_notebooks = 10              # per user
+max_upload_mb_total = 100       # per user, all documents together
+server_key_daily_usd = 1.0      # spend cap for accounts allowed to use the server's ANTHROPIC_API_KEY
+session_days = 30               # how long a login lasts
+secure_cookies = true           # session cookie only over HTTPS; configs/app-dev.toml turns this off
+key_check_model = "claude-haiku-5-5"   # used for the free token-count call that validates a user's key

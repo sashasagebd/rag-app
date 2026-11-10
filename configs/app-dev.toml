@@ -1,0 +1,6 @@
+# Local development over plain http://localhost (the browser won't send a Secure cookie without HTTPS).
+#   APP_CONFIG=configs/app-dev.toml APP_SECRET_KEY=... uvicorn api.app:create_app --factory --reload
+extends = "configs/app.toml"
+
+[app]
+secure_cookies = false

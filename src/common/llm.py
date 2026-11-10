@@ -29,8 +29,11 @@ class LLMError(RuntimeError):
     pass
 
 
-def client() -> anthropic.Anthropic:
+def client(api_key: str | None = None) -> anthropic.Anthropic:
+    """The server's client (ANTHROPIC_API_KEY from .env), or a client for a user's own key."""
     global _client
+    if api_key:
+        return anthropic.Anthropic(api_key=api_key, max_retries=1)
     if _client is None:
         load_dotenv()
         _client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
@@ -38,7 +41,9 @@ def client() -> anthropic.Anthropic:
 
 
 def complete_json(*, model: str, system: str, user: str, schema: dict, effort: str,
-                  max_tokens: int, cache=None) -> dict:
+                  max_tokens: int, cache=None, api_key: str | None = None) -> dict:
+    """api_key: bill this call to that key instead of the server's. It is never part of the
+    cache key, so a cached answer is shared only between identical requests (same documents)."""
     request = {
         "model": model,
         "max_tokens": max_tokens,
@@ -51,7 +56,7 @@ def complete_json(*, model: str, system: str, user: str, schema: dict, effort: s
         if hit is not None:
             return {**hit, "cached": True}
 
-    response = client().messages.create(**request)
+    response = client(api_key).messages.create(**request)
     if response.stop_reason == "refusal":
         raise LLMError(f"model refused: {response.stop_details}")
     if response.stop_reason == "max_tokens":
