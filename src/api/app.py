@@ -18,6 +18,11 @@ may use the server's key, until [app] server_key_daily_usd is spent for the day.
 Each user may ask [app] questions_per_day questions per day (CPU on the server).
 
 If web/dist exists (the built React UI), it is served at /.
+
+Hardening: the interactive API docs (/docs, /redoc, /openapi.json) exist only when
+[app] api_docs = true (development). Every response carries security headers
+(SECURITY_HEADERS): no framing by other sites, no content sniffing, a strict
+Content-Security-Policy, and HSTS when cookies are secure (HTTPS deployments).
 """
 
 import logging
@@ -55,6 +60,40 @@ from retrieval.search import get_reranker
 log = logging.getLogger("api")
 COOKIE = "session"
 WEB_DIST = Path("web/dist")
+
+SECURITY_HEADERS = {
+    "X-Frame-Options": "DENY",                # other sites can't embed the app (clickjacking)
+    "X-Content-Type-Options": "nosniff",      # browsers use the declared content type, never guess
+    "Referrer-Policy": "same-origin",
+    # Only this site's own scripts, styles, images and API; no inline scripts, no framing.
+    "Content-Security-Policy": ("default-src 'self'; img-src 'self' data:; object-src 'none'; "
+                                "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"),
+}
+
+
+def open_database(url: str, timeout: float = 50.0) -> psycopg.Connection:
+    """Connect and apply db/schema.sql, waiting for a database that is still starting.
+
+    On the platform, a fresh database container may still be pulling its image or
+    initialising when the app starts; without waiting, the app would exit and fail
+    its health check. A database without pgvector gets an explicit message."""
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            return connect(url)
+        except psycopg.OperationalError as e:
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"the database at DATABASE_URL never became reachable: {e}") from e
+            log.warning("waiting for the database: %s", str(e).strip().splitlines()[0])
+            time.sleep(2)
+        except psycopg.errors.FeatureNotSupported as e:
+            raise RuntimeError("the database has no pgvector extension; it must run a pgvector image "
+                               "(e.g. pgvector/pgvector:0.8.7-pg18-trixie)") from e
+
+
+def server_key_configured() -> bool:
+    """The server's own ANTHROPIC_API_KEY is set (it's optional)."""
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
 class LimitError(Exception):
@@ -196,18 +235,32 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        with connect(url) as conn:  # applies db/schema.sql
+        with open_database(url) as conn:  # waits for the database, applies db/schema.sql
+            log.warning("database ready, schema applied")
             failed = store.fail_interrupted(conn)
             if failed:
                 log.warning("marked %d interrupted uploads as failed", failed)
             admin, admin_hash = os.environ.get("ADMIN_USERNAME"), os.environ.get("ADMIN_PASSWORD_HASH")
             if admin and admin_hash:
-                log.warning("admin account %s: %s", admin, accounts.ensure_admin(conn, admin, admin_hash))
+                try:
+                    log.warning("admin account %s: %s", admin, accounts.ensure_admin(conn, admin, admin_hash))
+                except AccountError as e:  # a typo in an env var shouldn't take the whole app down
+                    log.error("admin account NOT set up: %s", e)
         if warm_up:
             threading.Thread(target=load_models, daemon=True, name="warm-up").start()
         yield
 
-    app = FastAPI(title="rag-app", lifespan=lifespan)
+    docs = settings.get("api_docs", False)
+    app = FastAPI(title="rag-app", lifespan=lifespan, docs_url="/docs" if docs else None,
+                  redoc_url="/redoc" if docs else None, openapi_url="/openapi.json" if docs else None)
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers.update(SECURITY_HEADERS)
+        if settings["secure_cookies"]:  # i.e. served over HTTPS
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
+        return response
 
     # ----- errors -> HTTP status + {"detail": message}
     for exc, status in [(NotFoundError, 404), (NotebookError, 400), (FetchError, 400), (AccountError, 400),
@@ -247,7 +300,7 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
         u = accounts.get_user(conn, user_id)
         return {
             "username": u["username"], "has_api_key": u["has_api_key"], "api_key_hint": u["api_key_hint"],
-            "uses_server_key": u["use_server_key"], "is_admin": u["is_admin"],
+            "uses_server_key": u["use_server_key"] and server_key_configured(), "is_admin": u["is_admin"],
             "usage": {
                 "questions_today": accounts.questions_today(conn, user_id),
                 "questions_per_day": u["daily_question_limit"] or settings["questions_per_day"],
@@ -388,7 +441,7 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
         encrypted = accounts.get_api_key_enc(conn, user_id)
         if encrypted and (key := keybox.decrypt(encrypted)):
             return key, "user"
-        if accounts.get_user(conn, user_id)["use_server_key"]:
+        if accounts.get_user(conn, user_id)["use_server_key"] and server_key_configured():
             if accounts.server_spend_today(conn) >= settings["server_key_daily_usd"]:
                 raise LimitError("the shared key has reached today's spending cap; add your own key in Settings")
             return None, "server"

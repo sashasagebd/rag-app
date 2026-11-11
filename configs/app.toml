@@ -13,3 +13,4 @@ server_key_daily_usd = 1.0      # spend cap for accounts allowed to use the serv
 session_days = 30               # how long a login lasts
 secure_cookies = true           # session cookie only over HTTPS; configs/app-dev.toml turns this off
 key_check_model = "claude-haiku-5-5"   # used for the free token-count call that validates a user's key
+api_docs = false                # /docs, /redoc, /openapi.json: off in production

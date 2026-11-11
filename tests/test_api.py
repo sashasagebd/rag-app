@@ -153,7 +153,8 @@ def test_ask_needs_a_key_then_answers_with_citations_and_limits(env):
     assert r.status_code == 429 and "daily limit" in r.json()["detail"]
 
 
-def test_server_key_accounts_and_the_spend_cap(env):
+def test_server_key_accounts_and_the_spend_cap(env, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-server-" + "k" * 30)  # never called: answers are faked
     a, conn = env["a"], env["conn"]
     signup(env, a, "pytest_a")
     accounts.update_user(conn, "pytest_a", use_server_key=True)
@@ -200,3 +201,45 @@ def test_admin_account_is_created_from_env_at_startup(env, monkeypatch):
     with TestClient(api_app.create_app(load_config("configs/app-dev.toml"), ingest_kwargs=FAKES)) as c:
         r = c.post("/api/auth/login", json={"username": "pytest_boss", "password": "the boss password"})
         assert r.status_code == 200 and r.json()["is_admin"] and r.json()["uses_server_key"]
+
+
+def test_server_key_access_without_a_server_key_asks_for_your_own(env, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    a, conn = env["a"], env["conn"]
+    signup(env, a, "pytest_a")
+    accounts.update_user(conn, "pytest_a", use_server_key=True)
+    assert a.get("/api/me").json()["uses_server_key"] is False  # the UI then asks for a key
+    a.post("/api/notebooks", json={"name": "nb"})
+    a.post("/api/notebooks/nb/documents", files={"file": ("grading.html", HTML, "text/html")})
+    r = a.post("/api/notebooks/nb/ask", json={"question": "How much is homework worth?"})
+    assert r.status_code == 403 and "add your Anthropic API key" in r.json()["detail"]
+
+
+def test_security_headers_on_every_response(env):
+    for path in ("/api/health", "/api/me", "/no-such-page"):
+        h = env["a"].get(path).headers
+        assert h["x-frame-options"] == "DENY" and h["x-content-type-options"] == "nosniff"
+        assert "frame-ancestors 'none'" in h["content-security-policy"]
+        assert "strict-transport-security" not in h  # dev config: plain http, no HSTS
+
+
+def test_api_docs_only_when_enabled(env):
+    config = load_config("configs/app-dev.toml")
+    assert env["a"].get("/openapi.json").status_code == 200  # dev: on
+    config["app"].update(api_docs=False, secure_cookies=True)  # production settings
+    with TestClient(api_app.create_app(config, ingest_kwargs=FAKES)) as c:
+        for path in ("/docs", "/redoc", "/openapi.json"):
+            assert c.get(path).status_code == 404, path
+        assert c.get("/api/health").headers["strict-transport-security"] == "max-age=31536000"
+
+
+def test_a_bad_admin_env_var_does_not_stop_startup(env, monkeypatch):
+    monkeypatch.setenv("ADMIN_USERNAME", "pytest_boss")
+    monkeypatch.setenv("ADMIN_PASSWORD_HASH", "ADMIN_PASSWORD_HASH=scrypt$pasted$wrong")  # a typical paste mistake
+    with TestClient(api_app.create_app(load_config("configs/app-dev.toml"), ingest_kwargs=FAKES)) as c:
+        assert c.get("/api/health").status_code == 200
+
+
+def test_an_unreachable_database_fails_with_a_clear_error():
+    with pytest.raises(RuntimeError, match="never became reachable"):
+        api_app.open_database("postgresql://nobody:x@127.0.0.1:1/nothing", timeout=1)

@@ -4,3 +4,4 @@ extends = "configs/app.toml"
 
 [app]
 secure_cookies = false
+api_docs = true                 # http://localhost:8000/docs
