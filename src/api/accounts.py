@@ -81,8 +81,9 @@ def delete_session(conn: psycopg.Connection, token: str) -> None:
 
 def get_user(conn: psycopg.Connection, user_id: int) -> dict:
     row = conn.execute("SELECT id, username, api_key_enc IS NOT NULL, api_key_hint, use_server_key, "
-                       "daily_question_limit, created_at FROM users WHERE id = %s", (user_id,)).fetchone()
-    keys = ["id", "username", "has_api_key", "api_key_hint", "use_server_key", "daily_question_limit", "created_at"]
+                       "daily_question_limit, created_at, is_admin FROM users WHERE id = %s", (user_id,)).fetchone()
+    keys = ["id", "username", "has_api_key", "api_key_hint", "use_server_key", "daily_question_limit", "created_at",
+            "is_admin"]
     return dict(zip(keys, row))
 
 
@@ -124,16 +125,42 @@ def history(conn: psycopg.Connection, user_id: int, collection_id: int, limit: i
 
 # ---------- admin ----------
 
+def ensure_admin(conn: psycopg.Connection, username: str, password_hash: str) -> str:
+    """Create the admin account from a password hash (exported with `python -m api.admin export-login`),
+    or make an existing account admin. Never changes an existing password. Returns what happened."""
+    username = username.strip().lower()
+    if not USERNAME_RE.match(username):
+        raise AccountError(f"ADMIN_USERNAME '{username}' is not a valid username")
+    if not password_hash.startswith("scrypt$") or password_hash.count("$") != 2:
+        raise AccountError("ADMIN_PASSWORD_HASH must be the scrypt$... value printed by `api.admin export-login`")
+    row = conn.execute("SELECT is_admin FROM users WHERE username = %s", (username,)).fetchone()
+    if row is None:
+        conn.execute("INSERT INTO users (username, password_hash, is_admin, use_server_key) VALUES (%s, %s, true, true)",
+                     (username, password_hash))
+        return "created"
+    if not row[0]:
+        conn.execute("UPDATE users SET is_admin = true WHERE username = %s", (username,))
+        return "made admin"
+    return "unchanged"
+
+
+def password_hash_of(conn: psycopg.Connection, username: str) -> str:
+    row = conn.execute("SELECT password_hash FROM users WHERE username = %s", (username.strip().lower(),)).fetchone()
+    if row is None:
+        raise AccountError(f"no user named '{username}'")
+    return row[0]
+
+
 def list_users(conn: psycopg.Connection) -> list[tuple]:
-    """(username, created_at, has_key, use_server_key, daily_question_limit, questions_today, usd_total)."""
+    """(username, created_at, has_key, use_server_key, daily_question_limit, questions_today, usd_total, is_admin)."""
     return conn.execute(
         "SELECT u.username, u.created_at, u.api_key_enc IS NOT NULL, u.use_server_key, u.daily_question_limit, "
-        "count(q.id) FILTER (WHERE q.created_at >= date_trunc('day', now())), coalesce(sum(q.usd), 0) "
+        "count(q.id) FILTER (WHERE q.created_at >= date_trunc('day', now())), coalesce(sum(q.usd), 0), u.is_admin "
         "FROM users u LEFT JOIN questions q ON q.user_id = u.id GROUP BY u.id ORDER BY u.username").fetchall()
 
 
 def update_user(conn: psycopg.Connection, username: str, **fields) -> None:
-    allowed = {"use_server_key", "daily_question_limit"}
+    allowed = {"use_server_key", "daily_question_limit", "is_admin"}
     assert set(fields) <= allowed, fields
     sets = ", ".join(f"{k} = %({k})s" for k in fields)
     if conn.execute(f"UPDATE users SET {sets} WHERE username = %(u)s", {**fields, "u": username}).rowcount == 0:

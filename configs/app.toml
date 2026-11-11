@@ -2,6 +2,9 @@
 #   APP_SECRET_KEY=... uvicorn api.app:create_app --factory    (reads APP_CONFIG, default this file)
 extends = "configs/notebook.toml"
 
+[notebook]
+keep_originals = false          # production containers have no persistent disk; chunks are in Postgres
+
 [app]
 questions_per_day = 30          # per user (each question uses server CPU for search + rerank)
 max_notebooks = 10              # per user

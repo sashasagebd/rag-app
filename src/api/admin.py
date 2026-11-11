@@ -5,6 +5,12 @@ Usage (from the repo root):
     python -m api.admin users                           # accounts, keys, usage
     python -m api.admin server-key sasha on|off         # allow/deny the server's API key
     python -m api.admin limit sasha 100|default         # questions per day for one user
+    python -m api.admin admin sasha on|off              # admin section in Settings
+    python -m api.admin export-login sasha              # env vars that recreate this login elsewhere
+
+In production there is no terminal: the admin section in Settings does invites,
+users, server key and limits, and ADMIN_USERNAME + ADMIN_PASSWORD_HASH (from
+export-login) create the first admin at startup.
 
 Uses APP_CONFIG (default configs/app.toml) for the database URL.
 """
@@ -25,6 +31,10 @@ def main() -> int:
     p = sub.add_parser("invite")
     p.add_argument("--note", help="who it's for (stored with the invite)")
     sub.add_parser("users")
+    p = sub.add_parser("admin")
+    p.add_argument("username")
+    p.add_argument("state", choices=["on", "off"])
+    sub.add_parser("export-login").add_argument("username")
     p = sub.add_parser("server-key")
     p.add_argument("username")
     p.add_argument("state", choices=["on", "off"])
@@ -42,14 +52,22 @@ def main() -> int:
             elif args.command == "users":
                 rows = accounts.list_users(conn)
                 print(f"{'user':20} {'joined':10}  key   server-key  limit  today  total $")
-                for name, created, has_key, server, limit, today, usd in rows:
+                for name, created, has_key, server, limit, today, usd, admin in rows:
                     print(f"{name:20} {created:%Y-%m-%d}  {'yes' if has_key else 'no ':3}   {'on ' if server else 'off'}"
-                          f"         {limit or '-':>5}  {today:5}  {float(usd):7.3f}")
+                          f"         {limit or '-':>5}  {today:5}  {float(usd):7.3f}{'  admin' if admin else ''}")
                 if not rows:
                     print("no users yet: python -m api.admin invite")
             elif args.command == "server-key":
                 accounts.update_user(conn, args.username, use_server_key=args.state == "on")
                 print(f"{args.username}: server key {args.state}")
+            elif args.command == "admin":
+                accounts.update_user(conn, args.username, is_admin=args.state == "on")
+                print(f"{args.username}: admin {args.state}")
+            elif args.command == "export-login":
+                print("# Paste these into the production app's env vars. The hash is not your password,")
+                print("# but treat it as a secret: it would let someone try to guess the password offline.")
+                print(f"ADMIN_USERNAME={args.username.strip().lower()}")
+                print(f"ADMIN_PASSWORD_HASH={accounts.password_hash_of(conn, args.username)}")
             elif args.command == "limit":
                 n = None if args.questions == "default" else int(args.questions)
                 accounts.update_user(conn, args.username, daily_question_limit=n)

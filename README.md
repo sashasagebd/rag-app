@@ -105,6 +105,38 @@ python -m eval.validate_questions          # every *.jsonl in data/questions/
 pytest
 ```
 
+## Deploying (ops-dashboard)
+
+The app ships as one Docker image (`Dockerfile`): the built UI, FastAPI and the local models (baked in at build time, ~3.2 GB, mostly PyTorch and the reranker). The ops-dashboard platform builds it from this repo and redeploys on every push.
+
+**Needs:** the platform's app databases must have pgvector (`DatabaseImage = "pgvector/pgvector:0.8.7-pg18-trixie"` in ops-dashboard).
+
+**App settings on the dashboard:**
+
+| setting | value |
+|---|---|
+| port | `8000` |
+| health check path | `/api/health` |
+| memory | `2 GB` (measured ~0.9 GB with both models loaded) |
+| database | **Add a database** (provides `DATABASE_URL`) |
+| public name | e.g. `notebooks` → `https://notebooks.sashasagebd.com` (HTTPS via Cloudflare) |
+
+**Env vars on the dashboard:**
+
+| var | |
+|---|---|
+| `APP_SECRET_KEY` | required; a **new** random value: `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Keep a copy: if it changes, users must re-enter their API keys. |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` | your login, from `python -m api.admin export-login <username>` run against your dev database. Creates your account (admin, server key on) at first start. |
+| `ANTHROPIC_API_KEY` | optional; the server key, for accounts with server key on (capped at `[app] server_key_daily_usd` per day). |
+
+There's no terminal in production: invites, users, server-key access and limits are in **Settings → Admin**. Containers have no persistent disk, so original upload files aren't kept (`keep_originals = false`); documents' text and chunks live in Postgres, which the platform backs up daily.
+
+**Test the image locally** (same builder as the platform):
+
+```bash
+DOCKER_BUILDKIT=0 docker build -t rag-app:local .
+```
+
 ## Eval question format
 
 Each line of a `.jsonl` file in `data/questions/` holds one question:
@@ -144,6 +176,7 @@ src/notebook/              notebooks: safe URL fetch, upload checks, storage, as
 src/api/                   web API (FastAPI): accounts, notebooks, uploads, asking; admin CLI
 configs/app.toml           web app limits (app-dev.toml for http://localhost)
 web/                       the web UI (React + TypeScript, Vite)
+Dockerfile                 the production image (UI + API + models); .dockerignore keeps .env and data out
 results/                   one JSON per eval run
 db/schema.sql              collections + chunks tables
 src/retrieval/             (empty, not built yet)

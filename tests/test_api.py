@@ -168,3 +168,35 @@ def test_server_key_accounts_and_the_spend_cap(env):
                  "(SELECT id FROM users WHERE username = 'pytest_a')")
     r = a.post("/api/notebooks/nb/ask", json={"question": "Again?"})
     assert r.status_code == 429 and "spending cap" in r.json()["detail"]
+
+
+def test_admin_section_is_admin_only(env):
+    a, b, conn = env["a"], env["b"], env["conn"]
+    signup(env, a, "pytest_admin")
+    signup(env, b, "pytest_b")
+    assert b.get("/api/admin/users").status_code == 403
+    assert b.post("/api/admin/invites", json={}).status_code == 403
+
+    accounts.update_user(conn, "pytest_admin", is_admin=True)
+    assert a.get("/api/me").json()["is_admin"] is True
+    code = a.post("/api/admin/invites", json={"note": "pytest"}).json()["code"]
+    with TestClient(b.app) as c:  # the code works for a new sign-up
+        r = c.post("/api/auth/signup", json={"invite": code, "username": "pytest_c", "password": "x" * 12})
+        assert r.status_code == 201
+
+    users = a.patch("/api/admin/users/pytest_b", json={"use_server_key": True, "daily_question_limit": 5}).json()
+    row = [u for u in users if u["username"] == "pytest_b"][0]
+    assert row["use_server_key"] is True and row["daily_question_limit"] == 5
+    users = a.patch("/api/admin/users/pytest_b", json={"daily_question_limit": None}).json()
+    assert [u for u in users if u["username"] == "pytest_b"][0]["daily_question_limit"] is None
+    assert a.patch("/api/admin/users/nobody", json={"use_server_key": True}).status_code == 400
+
+
+def test_admin_account_is_created_from_env_at_startup(env, monkeypatch):
+    from api.security import hash_password
+
+    monkeypatch.setenv("ADMIN_USERNAME", "pytest_boss")
+    monkeypatch.setenv("ADMIN_PASSWORD_HASH", hash_password("the boss password"))
+    with TestClient(api_app.create_app(load_config("configs/app-dev.toml"), ingest_kwargs=FAKES)) as c:
+        r = c.post("/api/auth/login", json={"username": "pytest_boss", "password": "the boss password"})
+        assert r.status_code == 200 and r.json()["is_admin"] and r.json()["uses_server_key"]

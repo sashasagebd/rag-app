@@ -9,3 +9,4 @@ url_timeout_s = 15               # whole download, and each network step
 max_redirects = 3
 full_context_max_tokens = 15000  # notebooks this small skip retrieval: every chunk goes to the model
 storage_dir = "data/notebooks"   # original uploads, kept so a notebook can be re-ingested
+keep_originals = true            # write those originals (the web app turns this off)

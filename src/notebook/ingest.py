@@ -25,7 +25,7 @@ from urllib.parse import urlsplit
 import psycopg
 import pymupdf
 
-from common.embedding import embed
+from common.embedding import MODEL_LOCK, embed
 from ingest.chunk import chunk_docs, make_token_counter
 from ingest.parse import parse_bytes
 from notebook import store
@@ -62,8 +62,9 @@ def name_from_url(url: str, doc_type: str) -> str:
 
 
 @lru_cache(maxsize=4)
-def _token_counter(model_name: str):
-    return make_token_counter(model_name)
+def token_counter(model_name: str):
+    with MODEL_LOCK:  # loading the tokenizer imports transformers: not thread-safe
+        return make_token_counter(model_name)
 
 
 def check_document(data: bytes, limits: dict) -> str:
@@ -114,7 +115,7 @@ def build(meta: dict, data: bytes, config: dict, cache=None, count_tokens=None, 
             else "no readable text (the page may build its content with JavaScript)")
 
     ch, emb = config["chunking"], config["embedding"]
-    count_tokens = count_tokens or _token_counter(emb["model"])
+    count_tokens = count_tokens or token_counter(emb["model"])
     chunks = chunk_docs([parsed], ch["method"], ch["max_tokens"], count_tokens, ch.get("clean_latex", False))
     texts = [c["text"] for c in chunks]
     embeddings = embed_fn(texts) if embed_fn else embed(texts, emb["model"], emb["batch_size"], cache=cache)

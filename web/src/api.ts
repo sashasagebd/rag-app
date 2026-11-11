@@ -15,7 +15,19 @@ export type Me = {
   has_api_key: boolean;
   api_key_hint: string | null;
   uses_server_key: boolean;
+  is_admin: boolean;
   usage: Usage;
+};
+
+export type AdminUser = {
+  username: string;
+  created_at: string;
+  has_api_key: boolean;
+  use_server_key: boolean;
+  daily_question_limit: number | null; // null = the default
+  questions_today: number;
+  usd_total: number;
+  is_admin: boolean;
 };
 
 export type Notebook = { name: string; documents: number; tokens: number; created_at: string };
@@ -110,4 +122,10 @@ export const api = {
 
   questions: (notebook: string) => request<Answer[]>("GET", `${nb(notebook)}/questions`),
   ask: (notebook: string, question: string) => request<Answer>("POST", `${nb(notebook)}/ask`, { question }),
+
+  // admins only
+  adminUsers: () => request<AdminUser[]>("GET", "/admin/users"),
+  adminInvite: (note: string) => request<{ code: string }>("POST", "/admin/invites", { note }),
+  adminUpdateUser: (username: string, patch: { use_server_key?: boolean; daily_question_limit?: number | null }) =>
+    request<AdminUser[]>("PATCH", `/admin/users/${encodeURIComponent(username)}`, patch),
 };

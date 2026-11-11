@@ -7,21 +7,29 @@ The model is loaded once per process. With a cache, only texts never seen
 before are embedded; re-ingesting unchanged chunks is nearly instant.
 
 bge models want a prefix on QUERIES (not on passages); see QUERY_PREFIX.
+
+MODEL_LOCK serializes every model load (embedder, tokenizer, reranker) across
+threads: the transformers library imports lazily and is not thread-safe while
+importing, so two web requests loading models at once could crash one of them.
 """
+
+import threading
 
 import numpy as np
 
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 _models: dict = {}
+MODEL_LOCK = threading.RLock()
 
 
 def get_model(name: str):
-    if name not in _models:
-        from sentence_transformers import SentenceTransformer  # slow import; only when needed
+    with MODEL_LOCK:
+        if name not in _models:
+            from sentence_transformers import SentenceTransformer  # slow import; only when needed
 
-        _models[name] = SentenceTransformer(name)
-    return _models[name]
+            _models[name] = SentenceTransformer(name)
+        return _models[name]
 
 
 def embed(texts: list[str], model_name: str, batch_size: int = 32, cache=None, progress: bool = False) -> np.ndarray:

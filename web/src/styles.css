@@ -234,3 +234,12 @@ label { display: grid; gap: 0.3rem; font-weight: 500; }
   .page { padding: 1rem 16px; }
   .topbar .small { display: none; }
 }
+
+/* ---------- admin section ---------- */
+.admin { display: grid; gap: 0.8rem; }
+.invite-code code { font-size: 1.05rem; padding: 0.25em 0.5em; }
+.table-scroll { overflow-x: auto; }
+.admin table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+.admin th, .admin td { text-align: left; padding: 0.4rem 0.6rem 0.4rem 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.admin th { color: var(--muted); font-weight: 500; }
+.admin td .badge { margin-left: 0.4rem; }

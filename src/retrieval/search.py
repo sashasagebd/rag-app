@@ -29,7 +29,7 @@ import psycopg
 
 from common.cache import Cache
 from common.config import load_config
-from common.embedding import QUERY_PREFIX, embed
+from common.embedding import MODEL_LOCK, QUERY_PREFIX, embed
 from ingest.embed_load import connect, database_url
 
 RRF_K = 60  # standard reciprocal-rank-fusion constant
@@ -97,12 +97,13 @@ _rerankers: dict = {}
 
 
 def get_reranker(name: str):
-    """Load a cross-encoder once per process."""
-    if name not in _rerankers:
-        from sentence_transformers import CrossEncoder  # slow import; only when needed
+    """Load a cross-encoder once per process (under the shared model lock)."""
+    with MODEL_LOCK:
+        if name not in _rerankers:
+            from sentence_transformers import CrossEncoder  # slow import; only when needed
 
-        _rerankers[name] = CrossEncoder(name)
-    return _rerankers[name]
+            _rerankers[name] = CrossEncoder(name)
+        return _rerankers[name]
 
 
 def rerank(question: str, chunks: list[dict], model_name: str, k: int, cache: Cache | None = None) -> list[dict]:

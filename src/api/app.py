@@ -4,6 +4,8 @@
 
 Settings: APP_CONFIG (default configs/app.toml). APP_SECRET_KEY (required) encrypts
 users' Anthropic keys. Every route except signup/login/health needs a session cookie.
+ADMIN_USERNAME + ADMIN_PASSWORD_HASH (optional, from `python -m api.admin export-login`)
+create the first admin at startup; admins get /api/admin/* (invites, users), shown in Settings.
 
 Notebooks: a user's notebook "ml-papers" is stored as collection "u<user id>--ml-papers",
 and every route checks that the notebook belongs to the logged-in user.
@@ -21,6 +23,7 @@ If web/dist exists (the built React UI), it is served at /.
 import logging
 import os
 import shutil
+import threading
 import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
@@ -38,14 +41,16 @@ from api import accounts
 from api.accounts import AccountError
 from api.security import KeyBox, key_hint
 from common.cache import Cache
+from common.embedding import get_model
 from common.config import load_config
 from common.llm import LLMError, client, cost_usd
 from ingest.embed_load import connect, database_url
 from notebook import store
 from notebook.ask import ask, cite_label
 from notebook.fetch import FetchError, fetch
-from notebook.ingest import build, name_from_url, precheck, save_original, sniff_type
+from notebook.ingest import token_counter, build, name_from_url, precheck, save_original, sniff_type
 from notebook.store import NAME_RE, NotebookError, NotFoundError
+from retrieval.search import get_reranker
 
 log = logging.getLogger("api")
 COOKIE = "session"
@@ -87,6 +92,15 @@ class UrlBody(BaseModel):
 
 class AskBody(BaseModel):
     question: str
+
+
+class InviteBody(BaseModel):
+    note: str | None = None
+
+
+class UserPatch(BaseModel):
+    use_server_key: bool | None = None
+    daily_question_limit: int | None = None  # null = back to the default (when sent)
 
 
 # ---------- helpers ----------
@@ -164,7 +178,21 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
     url = database_url(config)
     cache = Cache(config["paths"]["cache_db"])
     throttle = LoginThrottle()
+    warm_up = not ingest_kwargs  # tests pass fakes and need no models
     ingest_kwargs = ingest_kwargs or {}
+
+    def load_models() -> None:
+        """Load the tokenizer, embedder and reranker once, right after startup, so the first
+        request doesn't wait for them. In a thread: the health check answers meanwhile."""
+        started = time.monotonic()
+        try:
+            token_counter(config["embedding"]["model"])
+            get_model(config["embedding"]["model"])
+            if config["retrieval"].get("rerank_model"):
+                get_reranker(config["retrieval"]["rerank_model"])
+            log.warning("models loaded in %.1fs", time.monotonic() - started)
+        except Exception:
+            log.exception("loading models failed; they will load on first use")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -172,6 +200,11 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
             failed = store.fail_interrupted(conn)
             if failed:
                 log.warning("marked %d interrupted uploads as failed", failed)
+            admin, admin_hash = os.environ.get("ADMIN_USERNAME"), os.environ.get("ADMIN_PASSWORD_HASH")
+            if admin and admin_hash:
+                log.warning("admin account %s: %s", admin, accounts.ensure_admin(conn, admin, admin_hash))
+        if warm_up:
+            threading.Thread(target=load_models, daemon=True, name="warm-up").start()
         yield
 
     app = FastAPI(title="rag-app", lifespan=lifespan)
@@ -196,6 +229,11 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
             raise HTTPException(401, "please log in")
         return user_id
 
+    def current_admin(user_id=Depends(current_user), conn=Depends(get_conn)) -> int:
+        if not accounts.get_user(conn, user_id)["is_admin"]:
+            raise HTTPException(403, "admins only")
+        return user_id
+
     def owned_notebook(name: str, user_id: int, conn) -> tuple[str, int]:
         full = internal_name(user_id, name)
         return full, store.get_notebook(conn, full, user_id)
@@ -209,7 +247,7 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
         u = accounts.get_user(conn, user_id)
         return {
             "username": u["username"], "has_api_key": u["has_api_key"], "api_key_hint": u["api_key_hint"],
-            "uses_server_key": u["use_server_key"],
+            "uses_server_key": u["use_server_key"], "is_admin": u["is_admin"],
             "usage": {
                 "questions_today": accounts.questions_today(conn, user_id),
                 "questions_per_day": u["daily_question_limit"] or settings["questions_per_day"],
@@ -300,7 +338,8 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
             try:
                 chunks, embeddings = build(meta, data, config, cache, **ingest_kwargs)
                 store.add_document(conn, notebook_id, meta, chunks, embeddings)
-                save_original(limits, full, meta["name"], data)
+                if limits.get("keep_originals", True):  # off in production: no persistent disk there
+                    save_original(limits, full, meta["name"], data)
             except NotebookError as e:
                 store.mark_failed(conn, notebook_id, meta["name"], str(e))
             except Exception:
@@ -393,6 +432,28 @@ def create_app(config: dict | None = None, *, ingest_kwargs: dict | None = None)
     def list_questions(name: str, user_id=Depends(current_user), conn=Depends(get_conn)):
         _, notebook_id = owned_notebook(name, user_id, conn)
         return [question_json(row) for row in accounts.history(conn, user_id, notebook_id)]
+
+    # ----- admin (the admin section in Settings)
+    @app.get("/api/admin/users")
+    def admin_users(_=Depends(current_admin), conn=Depends(get_conn)):
+        keys = ["username", "created_at", "has_api_key", "use_server_key", "daily_question_limit",
+                "questions_today", "usd_total", "is_admin"]
+        return [{**dict(zip(keys, row)), "usd_total": float(row[6])} for row in accounts.list_users(conn)]
+
+    @app.post("/api/admin/invites", status_code=201)
+    def admin_invite(body: InviteBody, _=Depends(current_admin), conn=Depends(get_conn)):
+        return {"code": accounts.create_invite(conn, (body.note or "").strip() or None)}
+
+    @app.patch("/api/admin/users/{username}")
+    def admin_update_user(username: str, body: UserPatch, _=Depends(current_admin), conn=Depends(get_conn)):
+        fields = {k: getattr(body, k) for k in body.model_fields_set}
+        if fields.get("daily_question_limit") is not None and fields["daily_question_limit"] < 0:
+            raise AccountError("the limit can't be negative")
+        if fields.get("use_server_key") is None:
+            fields.pop("use_server_key", None)
+        if fields:
+            accounts.update_user(conn, username, **fields)
+        return admin_users(None, conn)
 
     # ----- the built UI, if present
     if WEB_DIST.is_dir():

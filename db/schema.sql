@@ -112,3 +112,7 @@ ALTER TABLE collections ADD COLUMN IF NOT EXISTS user_id integer REFERENCES user
 -- Web uploads are processed in the background: 'processing' -> 'ready' or 'failed' (with error).
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ready';
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS error text;
+
+-- Admins see the admin section in Settings (invites, users). The first admin is created
+-- at startup from ADMIN_USERNAME + ADMIN_PASSWORD_HASH (see src/api/app.py).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;

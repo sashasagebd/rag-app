@@ -1,5 +1,6 @@
 // Your Anthropic API key, today's usage, and logging out.
 import { useState, type FormEvent } from "react";
+import Admin from "./Admin";
 import { api, type Me } from "./api";
 
 export default function Settings({ me, onChange, onLogout }: {
@@ -75,6 +76,8 @@ export default function Settings({ me, onChange, onLogout }: {
           <li>Storage: <b>{u.upload_mb} MB</b> of {u.max_upload_mb} MB</li>
         </ul>
       </div>
+
+      {me.is_admin && <Admin />}
 
       <p>
         Logged in as <b>{me.username}</b>. <button className="link" onClick={onLogout}>Log out</button>
